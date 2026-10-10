@@ -1,0 +1,62 @@
+# Australian government information assistant
+
+This repository contains the locally run application and its test code. The interface uses HTML, CSS and JavaScript. A Python FastAPI service routes questions, searches short source notes with SQLite FTS5 and can ask a locally running, pretrained Qwen3 4B model through Ollama to summarise the retrieved notes. The model was not fine-tuned for this project. The API checks generated citations, dates and route details, and can return a labelled source extract when generation is unavailable or rejected.
+
+The assistant covers selected Australian tax and visa information. It is an academic information tool, **not an official government service or a source of personal advice**. The bundled notes are indexed project material; an active note does not imply that a government agency or named reviewer has approved its wording. Check linked official pages for current rules before using or demonstrating an answer.
+
+## Start the application
+
+Use Python 3.10 or later from this directory:
+
+```sh
+python3 -m venv .venv
+.venv/bin/python -m pip install -r backend/requirements.txt
+.venv/bin/uvicorn backend.app:app --host 127.0.0.1 --port 8000
+```
+
+Open <http://127.0.0.1:8000/>. API documentation is at <http://127.0.0.1:8000/docs>. On first start, the application creates an ignored SQLite database and imports the 26 bundled notes. The app still works without a local model: supported questions return source extracts.
+
+For optional local generation, [install Ollama](https://ollama.com/download), run `ollama pull qwen3:4b-instruct` and start Ollama. The default model connection is the loopback URL `http://127.0.0.1:11434/api/chat`. `OLLAMA_MODEL` selects an installed model; set it to an empty value to use extracts only. `OLLAMA_URL` can set another HTTP loopback `/api/chat` endpoint. The backend rejects remote model endpoints. No model weights or runtime database are stored in this repository.
+
+The browser keeps chat history and optional helpfulness choices in that browser's local storage; the SQLite database stores public source notes, not conversations. `GET /api/sources` lists indexed notes and `GET /api/health` shows the active count and model setting.
+
+## Check the code
+
+Run the backend unit and API checks:
+
+```sh
+.venv/bin/python -m unittest discover -s backend/tests -v
+```
+
+With the local server running, record unscored responses to the synthetic questions:
+
+```sh
+.venv/bin/python tests/run_eval.py --scenario normal --environment-label local --model-label qwen3:4b-instruct
+```
+
+The runner writes raw results to ignored `tests/runs/`. It does **not** judge factual correctness. `tests/run_closed_book.py` separately calls a local Ollama model without retrieval as an exploratory baseline; it writes to ignored `evidence/test-runs/` and likewise does not score answers. Neither run should be described as a participant study or an independent source review.
+
+Optional browser checks use Playwright:
+
+```sh
+npm install
+npx playwright install chromium
+npm run test:browser
+```
+
+The browser script opens a fresh context, checks core flows and saves its captures to ignored `evidence/`. Set `PLAYWRIGHT_BROWSER_PATH` to a local Chromium-compatible executable if you prefer to use an installed browser.
+Set `GOV_ASSISTANT_URL` to another loopback origin if the local server uses a port other than 8000.
+
+## Update source notes
+
+`backend/seed_sources.json` contains short paraphrased notes and official links. New or revised material can be staged and inspected before indexing:
+
+```sh
+.venv/bin/python -m backend.sources_cli stage path/to/new_notes.json
+.venv/bin/python -m backend.sources_cli list --status pending
+.venv/bin/python -m backend.sources_cli approve 7 --source-checked
+```
+
+The last flag is an operator confirmation, not an automated source check. When an existing URL and section changes, stage and approve a revised note to supersede the old one. Tax and visa material changes over time; recheck the page and record a review date before indexing a change.
+
+The original academic report, student details, screenshots, raw chat responses and local database are intentionally outside this code repository.
