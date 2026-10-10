@@ -1,0 +1,12 @@
+{
+  "private": true,
+  "name": "gov-assistant-browser-tests",
+  "version": "0.1.0",
+  "description": "Optional browser smoke checks for the local government information assistant",
+  "scripts": {
+    "test:browser": "node scripts/ui-smoke-current.cjs"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1"
+  }
+}

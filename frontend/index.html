@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#123b43">
+  <meta name="description" content="An independent Group 4 system for finding official Australian tax and visa information.">
+  <title>Gov Assistant Australia</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23123b43'/%3E%3Cpath d='M14 42V22h14v7H21v13zm15 0V22h21v7H36v5h12v8z' fill='%23f7c563'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="site-shell">
+    <header class="masthead">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">ga</span><span><strong>Gov Assistant</strong><small>AUSTRALIA</small></span></div>
+      <span class="header-note">Group 4 final system <span aria-hidden="true">·</span> Not an official government service</span>
+    </header>
+
+    <main class="workspace">
+      <aside class="sidebar" aria-label="Topics and information">
+        <div class="intro-kicker">SOURCE-GROUNDED HELP</div>
+        <h1>Find the right government page.</h1>
+        <p class="intro-copy">Ask about common Australian tax and visa tasks, including the October 2026 Student visa changes. Get a sourced answer in plain English.</p>
+        <div class="section-label">CHOOSE A TOPIC</div>
+        <div class="topic-list" role="group" aria-label="Choose a topic">
+          <button class="topic-card active" type="button" data-topic="tax"><span class="topic-icon" aria-hidden="true">$</span><span><strong>Tax &amp; the ATO</strong><small>TFNs, returns and super</small></span></button>
+          <button class="topic-card" type="button" data-topic="visa"><span class="topic-icon" aria-hidden="true">◎</span><span><strong>Visas &amp; immigration</strong><small>Visa options and applications</small></span></button>
+        </div>
+        <div class="how-card" aria-labelledby="how-title">
+          <span class="section-label">HOW THIS WORKS</span>
+          <h2 id="how-title">How answers are handled</h2>
+          <ol>
+            <li>Search selected indexed notes from official government pages.</li>
+            <li>Use the local model or display a source extract when appropriate.</li>
+            <li>Screen generated citations and link to the official pages.</li>
+          </ol>
+          <div class="badge-key"><strong>Answer labels</strong><span><b>Local AI summary</b> — citation-screened model text</span><span><b>Source extract</b> — text from indexed notes</span><span><b>No matching note</b> — use the official link</span></div>
+        </div>
+        <div class="sidebar-bottom"><strong>Keep your details private</strong><p>Don’t enter your TFN, passport number, myGov password or other personal information. Chat history is saved only in this browser on this device.</p></div>
+      </aside>
+
+      <section class="chat-panel" aria-label="Chat with Gov Assistant">
+        <div class="chat-header"><div><span class="eyebrow">YOUR QUESTION</span><h2>How can we help?</h2></div><div class="chat-actions"><button id="sources-open" class="source-badge" type="button"><span aria-hidden="true" class="badge-dot"></span> Sources</button><button id="history-open" class="history-button" type="button">History <span id="history-count" class="history-count">0</span></button><button id="new-chat" class="new-chat" type="button">New chat</button></div></div>
+        <div class="messages" id="messages" aria-live="polite" aria-relevant="additions">
+          <div class="message assistant-message"><span class="avatar" aria-hidden="true">ga</span><div class="message-body"><p>G’day. I can help you find information about Australian tax or visas. What would you like to know?</p></div></div>
+        </div>
+        <div class="chat-bottom">
+          <div class="suggestions" id="suggestions" aria-label="Suggested questions">
+            <button type="button" data-question="Where can I apply for a tax file number?">Apply for a TFN</button>
+          </div>
+          <form id="chat-form" class="composer"><label class="sr-only" for="question">Ask a question</label><input id="question" name="question" type="text" autocomplete="off" maxlength="500" placeholder="Ask about tax or visas…"><button type="submit" aria-label="Send question"><span aria-hidden="true">↗</span></button></form>
+          <p id="chat-status" class="chat-status" role="status" aria-live="polite"></p>
+          <p class="composer-note">Local deployment. Confirm current requirements on the linked official pages.</p>
+          <p id="site-status" class="site-status" role="status">Checking source-note status…</p>
+        </div>
+      </section>
+    </main>
+  </div>
+  <dialog id="history-dialog" class="history-dialog" aria-labelledby="history-title">
+    <div class="history-head"><div><span class="eyebrow">ON THIS DEVICE</span><h2 id="history-title">Chat history</h2></div><button id="history-close" class="history-close" type="button" aria-label="Close history">×</button></div>
+    <p id="history-note" class="history-note">Saved in this browser only. You can delete a chat or clear the whole list at any time.</p>
+    <ul id="history-list" class="history-list"></ul>
+    <div class="history-footer"><button id="history-clear" class="history-clear" type="button">Clear all history</button></div>
+  </dialog>
+  <dialog id="sources-dialog" class="sources-dialog" aria-labelledby="sources-title">
+    <div class="history-head"><div><span class="eyebrow">OFFICIAL GOVERNMENT PAGES</span><h2 id="sources-title">Source notes</h2></div><button id="sources-close" class="history-close" type="button" aria-label="Close sources">×</button></div>
+    <p class="history-note">These indexed notes link to their official pages. Check those pages for current requirements.</p>
+    <div class="source-filters" role="group" aria-label="Filter sources"><button type="button" data-source-topic="all" aria-pressed="true">All</button><button type="button" data-source-topic="tax" aria-pressed="false">Tax</button><button type="button" data-source-topic="visa" aria-pressed="false">Visas</button></div>
+    <p id="sources-status" class="sources-status" role="status">Loading sources…</p>
+    <ul id="sources-list" class="sources-directory"></ul>
+  </dialog>
+  <script src="app.js" type="module"></script>
+</body>
+</html>
