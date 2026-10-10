@@ -36,6 +36,12 @@ With the local server running, record unscored responses to the synthetic questi
 
 The runner writes raw results to ignored `tests/runs/`. It does **not** judge factual correctness. `tests/run_closed_book.py` separately calls a local Ollama model without retrieval as an exploratory baseline; it writes to ignored `evidence/test-runs/` and likewise does not score answers. Neither run should be described as a participant study or an independent source review.
 
+### Report test evidence and independent review
+
+[`tests/final-30-case-results-2026-10-10.csv`](tests/final-30-case-results-2026-10-10.csv) records the responses, retrieval details, response times and **provisional desk ratings** for the frozen 10 October evaluation: 29 normal synthetic questions and one model-outage case. Those ratings were AI-assisted and were **not** an independent human assessment. This CSV documents the evaluated 22-note build; the current application seeds 26 notes, so its answers may differ. The `raw_run_file` column points to run files held separately and is retained for provenance.
+
+[`tests/two-rater-review-blank-2026-10-10.csv`](tests/two-rater-review-blank-2026-10-10.csv) contains the same 30 cases with blank reviewer A/B columns. The [review guide](tests/two-rater-review-guide.md) explains how two people can assess answers independently before using `tests/calc_interrater_kappa.py`. No human ratings or agreement statistic are claimed here.
+
 Optional browser checks use Playwright:
 
 ```sh
@@ -59,4 +65,4 @@ Set `GOV_ASSISTANT_URL` to another loopback origin if the local server uses a po
 
 The last flag is an operator confirmation, not an automated source check. When an existing URL and section changes, stage and approve a revised note to supersede the old one. Tax and visa material changes over time; recheck the page and record a review date before indexing a change.
 
-The original academic report, student details, screenshots, raw chat responses and local database are intentionally outside this code repository.
+The original academic report, student details, screenshots, raw run files and local database are intentionally outside this code repository.
