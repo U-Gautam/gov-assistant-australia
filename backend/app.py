@@ -73,8 +73,13 @@ def introduction_route(question: str) -> str | None:
     q = question.strip().lower()
     if re.fullmatch(r"(?:hi|hello|hey|g['’]?day|good (?:morning|afternoon|evening))[!?.]*", q):
         return "greeting"
+    if re.fullmatch(r"(?:tax|taxes|tax help)[!?.]*", q):
+        return "tax_overview"
+    if re.fullmatch(r"(?:visa|visas|immigration|visa help)[!?.]*", q):
+        return "visa_overview"
     if re.fullmatch(
-        r"(?:help(?: me)?|what can you (?:do|help me with)|how does this (?:work|assistant work)|"
+        r"(?:help(?: me)?|what can you (?:do|help me with)|how can you help(?: me)?|"
+        r"(?:hi|hello|hey|g['’]?day)[, ]+how can you help(?: me)?|how does this (?:work|assistant work)|"
         r"what topics (?:do you cover|can you help with))[!?.]*",
         q,
     ):
@@ -84,6 +89,20 @@ def introduction_route(question: str) -> str | None:
 
 def introduction_answer(route: str) -> str:
     """Describe the available scope without presenting guidance as source evidence."""
+    if route == "tax_overview":
+        return (
+            "I can help you find information from selected Australian Taxation Office pages. "
+            "Try ‘How do I apply for a tax file number?’, ‘How do I link the ATO to myGov?’ "
+            "or ‘Where can I find lost super?’. Ask a specific question and check the linked "
+            "official page for current details."
+        )
+    if route == "visa_overview":
+        return (
+            "I can help you find information from selected Australian government visa pages. "
+            "Try ‘What changed for Student visas on 2 October 2026?’, ‘Where can I check "
+            "my visa conditions?’ or ‘What should I check after graduation?’. Ask a specific "
+            "question and check the linked official page for current details."
+        )
     opening = "G’day. " if route == "greeting" else ""
     return (
         opening

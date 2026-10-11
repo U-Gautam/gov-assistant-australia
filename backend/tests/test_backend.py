@@ -44,6 +44,8 @@ class BackendTests(unittest.TestCase):
             ("G’day!", "visa", "greeting"),
             ("What can you help me with?", "tax", "help"),
             ("What can you do?", "visa", "help"),
+            ("How can you help me?", "tax", "help"),
+            ("Hi, how can you help me?", "visa", "help"),
         ):
             with self.subTest(question=question):
                 result = client.post("/api/chat", json={"question": question, "topic": topic}).json()
@@ -56,6 +58,17 @@ class BackendTests(unittest.TestCase):
                 self.assertIn("How do I apply for a tax file number?", result["text"])
                 self.assertIn("What changed for Student visas", result["text"])
                 self.assertNotIn("don't have enough reviewed source", result["text"])
+
+        for question, topic, reason, expected in (
+            ("tax", "tax", "tax_overview", "tax file number"),
+            ("Tax?", "visa", "tax_overview", "tax file number"),
+            ("visas", "visa", "visa_overview", "visa conditions"),
+        ):
+            with self.subTest(question=question):
+                result = client.post("/api/chat", json={"question": question, "topic": topic}).json()
+                self.assertEqual(result["mode"], "guidance")
+                self.assertEqual(result["diagnostics"]["reason"], reason)
+                self.assertIn(expected, result["text"])
 
         # A real question following a greeting must still take the evidence route.
         result = self.client.post("/api/chat", json={
