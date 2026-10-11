@@ -203,6 +203,19 @@ class BackendTests(unittest.TestCase):
                 self.assertTrue(result["text"].endswith("Check the linked government pages for the current rule and your circumstances."))
         self.assertNotEqual(route_question("I am an international graduate student in Australia", "visa")[2], "student_post_study")
 
+        for broad_question in ("graduation", "after graduation", "graduating", "I've graduated"):
+            for topic in ("tax", "visa"):
+                with self.subTest(question=broad_question, topic=topic):
+                    self.assertEqual(route_question(broad_question, topic)[2], "student_post_study")
+                    result = client.post("/api/chat", json={"question": broad_question, "topic": topic}).json()
+                    self.assertEqual(result["mode"], "extractive")
+                    self.assertEqual(result["diagnostics"]["reason"], "matched")
+                    self.assertIn("If you mean graduating", result["text"])
+                    self.assertIn("VEVO", result["text"])
+                    self.assertIn("Temporary Graduate visa", result["text"])
+                    self.assertEqual(len(result["sources"]), 3)
+                    self.assertTrue(all(source["url"].startswith("https://immi.homeaffairs.gov.au/") for source in result["sources"]))
+
     def test_october_student_changes_are_answered_with_evidence(self):
         result = self.client.post("/api/chat", json={
             "question": "What were the recent visa changes for students on Oct 2 2026?",

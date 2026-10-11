@@ -47,6 +47,15 @@ def asks_about_post_study(question: str) -> bool:
     return bool(context and (graduation or completed_course))
 
 
+def broad_graduation_question(question: str) -> bool:
+    """A short graduation prompt is a request for a starting point, not an error."""
+    return bool(re.fullmatch(
+        r"(?:graduation|graduating|graduated|graduate|after graduation|after graduating|"
+        r"(?:i am|i['’]m) graduating|(?:i have|i['’]ve|i just) graduated|after i graduate)[!?.]*",
+        question.strip(), re.IGNORECASE,
+    ))
+
+
 def asks_about_provider_transfer(question: str) -> bool:
     """Require a transfer action; naming a college alone is not enough."""
     return bool(
@@ -96,7 +105,7 @@ def route_question(question: str, selected_topic: str) -> tuple[str | None, set[
         return "visa", {"visitor_stay_longer"}, "visitor_stay_longer"
     student = bool(re.search(r"\b(students?|guardian|subclass 500|subclass 590)\b", q))
     dated_change = bool(re.search(r"\b(2 oct|oct 2|2 october|october 2)\b", q)) and "visa" in q
-    post_study = asks_about_post_study(q)
+    post_study = asks_about_post_study(q) or broad_graduation_question(q)
     if student or dated_change or post_study:
         if asks_about_other_october_change(q):
             return "visa", set(), "unreviewed_change_date"
@@ -126,7 +135,7 @@ def search_sources(
     domain, allowed_intents, route = route_question(question, topic)
     if not allowed_intents or domain is None:
         return [], route
-    query_terms = terms(question)
+    query_terms = terms("graduation" if broad_graduation_question(question) else question)
     if not query_terms:
         return [], "no_search_terms"
     # Quoting every token makes user input data, never FTS query syntax.

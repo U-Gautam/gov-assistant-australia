@@ -17,7 +17,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from .retrieval import route_question, search_sources
+from .retrieval import broad_graduation_question, route_question, search_sources
 from .storage import connect, list_notes, seed_if_empty
 
 
@@ -65,6 +65,23 @@ def extractive_answer(evidence: list[dict]) -> str:
     lines = [f"From indexed official-source notes dated {checked}:"]
     lines.extend(f"{item['body']} [{index}]" for index, item in enumerate(evidence, 1))
     lines.append("Check the linked government pages for the current rule and your circumstances.")
+    return "\n\n".join(lines)
+
+
+def graduation_starting_answer(evidence: list[dict]) -> str:
+    """Give a short, cited starting point using exact indexed-note sentences."""
+    lines = [
+        "If you mean graduating as an international student in Australia, "
+        "these are useful first checks:"
+    ]
+    for index, item in enumerate(evidence, 1):
+        sentence = item["body"].split(". ", 1)[0].rstrip(".") + "."
+        lines.append(f"{index}. {sentence} [{index}]")
+    lines.append(
+        "Are you asking about your current visa, staying after your course, "
+        "or the Temporary Graduate visa? Check the linked Home Affairs pages "
+        "for current rules and your circumstances."
+    )
     return "\n\n".join(lines)
 
 
@@ -364,6 +381,22 @@ def create_app(
              "url": item["url"], "reviewed_on": item["reviewed_on"], "text": item["body"]}
             for item in evidence
         ]
+        if broad_graduation_question(question):
+            preferred_paths = ("/visa-holders", "/stay-longer", "/temporary-graduate-485")
+            selected = [next((item for item in evidence if path in item["url"]), None) for path in preferred_paths]
+            selected = [item for item in selected if item is not None]
+            if selected:
+                return {
+                    "text": graduation_starting_answer(selected),
+                    "sources": source_items(selected),
+                    "mode": "extractive",
+                    "evidence": [
+                        {"title": item["title"], "section": item["section"], "agency": item["agency"],
+                         "url": item["url"], "reviewed_on": item["reviewed_on"], "text": item["body"]}
+                        for item in selected
+                    ],
+                    "diagnostics": {"reason": reason, "retrieved": len(selected), "generation": "broad_graduation_extract"},
+                }
         mode = "extractive"
         answer = extractive_answer(evidence)
         controlled_reason = extractive_only_reason(question, route)
