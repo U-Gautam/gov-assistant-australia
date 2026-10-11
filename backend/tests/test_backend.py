@@ -5,6 +5,7 @@ import os
 import tempfile
 import unittest
 from concurrent.futures import ThreadPoolExecutor
+from datetime import date
 from pathlib import Path
 from unittest.mock import patch
 
@@ -31,7 +32,7 @@ class BackendTests(unittest.TestCase):
     def test_seed_is_reviewed_and_searchable(self):
         notes = list_notes(self.app.state.db, "approved")
         self.assertEqual(len(notes), SEED_COUNT)
-        self.assertTrue(all(note["reviewed_on"] == "2026-10-10" for note in notes))
+        self.assertTrue(all(date.fromisoformat(note["reviewed_on"]) <= date.today() for note in notes))
         self.assertEqual(self.client.get("/api/health").json()["approved_source_notes"], SEED_COUNT)
 
     def test_greetings_and_help_explain_scope_without_false_refusal_or_source_claim(self):
@@ -323,8 +324,26 @@ class BackendTests(unittest.TestCase):
                 result = self.client.post("/api/chat", json={"question": question, "topic": topic}).json()
                 self.assertEqual(result["evidence"], [])
 
+    def test_new_official_sources_answer_common_questions(self):
+        cases = (
+            ("What is income tax?", "tax", "tax_basics", "my.gov.au"),
+            ("How do I lodge my tax return online?", "tax", "tax_lodge", "my.gov.au"),
+            ("How do I create a myGov account?", "tax", "mygov_create", "my.gov.au"),
+            ("What is superannuation?", "tax", "super_basics", "my.gov.au"),
+            ("Am I a tax resident as an international student?", "tax", "tax_residency", "my.gov.au"),
+            ("Can I work on a student visa?", "visa", "student_work", "immi.homeaffairs.gov.au"),
+            ("How many hours can I work after graduation?", "visa", "student_work_after_study", "immi.homeaffairs.gov.au"),
+        )
+        for question, topic, route, source_host in cases:
+            with self.subTest(question=question):
+                result = self.client.post("/api/chat", json={"question": question, "topic": topic}).json()
+                self.assertEqual(result["diagnostics"]["reason"], "matched")
+                self.assertTrue(result["evidence"])
+                self.assertIn(source_host, result["sources"][0]["url"])
+                self.assertEqual(route_question(question, topic)[2], route)
+
     def test_unknown_or_unsupported_question_does_not_guess(self):
-        for question in ("Can I work on a student visa?", "What was the Student visa fee on 2 October 2026?"):
+        for question in ("Can I get a student visa refund?", "What was the Student visa fee on 2 October 2026?"):
             with self.subTest(question=question):
                 result = self.client.post("/api/chat", json={"question": question, "topic": "visa"}).json()
                 self.assertEqual(result["evidence"], [])

@@ -273,6 +273,20 @@ def covers_route_details(answer: str, route: str) -> bool:
         return "super" in lowered and "mygov" in lowered and "ato" in lowered
     if route == "tax_return_progress":
         return "mygov" in lowered and "manage tax returns" in lowered
+    if route == "tax_basics":
+        return "ato" in lowered and bool(re.search(r"\b(income|earn|pay)\b", lowered))
+    if route == "tax_residency":
+        return "visa" in lowered and "tax" in lowered and "resident" in lowered
+    if route == "super_basics":
+        return "super" in lowered and "employer" in lowered
+    if route == "mygov_basics":
+        return "mygov" in lowered and "services" in lowered
+    if route == "mygov_create":
+        return "mygov" in lowered and "account" in lowered and bool(re.search(r"\b(email|digital id)\b", lowered))
+    if route == "tax_lodge":
+        return "mygov" in lowered and "ato" in lowered and "lodgments" in lowered
+    if route == "student_work":
+        return "48 hours" in lowered and "vevo" in lowered and "course" in lowered
     if route == "visa_vevo":
         return "vevo" in lowered and bool(re.search(r"\b(current|hold|held|granted)\b", lowered))
     if route == "visa_application_status":
@@ -318,8 +332,12 @@ def extractive_only_reason(question: str, route: str) -> str | None:
     """Keep personal decisions and live prices with the official service."""
     if requires_location_caution(question, route):
         return "personal_location_requires_official_check"
+    if route == "student_work_after_study":
+        return "post_study_work_rights_require_vevo"
     return {
         "tax_need_lodge": "personal_tax_assessment_requires_official_tool",
+        "tax_residency": "personal_tax_residency_requires_official_check",
+        "tax_nonlodgment": "personal_lodgment_status_requires_official_check",
         "visa_health": "individual_health_check_requires_immiaccount",
         "visitor_stay_longer": "personal_visa_options_require_official_check",
         "student_post_study": "personal_visa_options_require_official_check",

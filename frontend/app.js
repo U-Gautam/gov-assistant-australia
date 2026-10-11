@@ -2,13 +2,15 @@ import {loadHistory, saveHistory, newSessionId, safeLink, MAX_SESSIONS, MAX_MESS
 
 const suggestions = {
   tax: [
+    ['Income tax basics','What is income tax?'],
     ['Apply for a TFN','How do I apply for a tax file number?'],
-    ['Find a lost TFN','I lost my TFN. Where can I find it?'],
-    ['Link ATO to myGov','How do I link the ATO to myGov?'],
-    ['Need to lodge?','How can I check whether I need to lodge an Australian tax return?'],
+    ['Lodge a return','How do I lodge my tax return online?'],
+    ['Create myGov','How do I create a myGov account?'],
+    ['Super basics','What is superannuation?'],
   ],
   visa: [
     ['Student visa changes','What changed for student visas on 2 October 2026?'],
+    ['Student work rights','Can I work on a Student visa?'],
     ['Check conditions','Where can I check the conditions on a visa I hold?'],
     ['Application status','How do I check the status of a visa application I lodged online?'],
     ['Family rules','Can family join me later on a Student visa?'],

@@ -87,6 +87,20 @@ def route_question(question: str, selected_topic: str) -> tuple[str | None, set[
         return "tax", {"tax_need_lodge"}, "tax_need_lodge"
     if re.search(r"\btax return\b", q) and re.search(r"\b(progress|status|track|tracked|already lodged|checked|check)\b", q):
         return "tax", {"tax_return_progress"}, "tax_return_progress"
+    if re.search(r"\b(?:non[- ]?lodg(?:e|ment)|do(?:n't| not) need to lodge)\b", q):
+        return "tax", {"tax_nonlodgment"}, "tax_nonlodgment"
+    if re.search(r"\bmygov\b", q) and re.search(r"\b(create|make|open|set up|sign up|register)\b", q):
+        return "tax", {"mygov_create"}, "mygov_create"
+    if re.search(r"\bmygov\b", q) and re.search(r"\b(what|how|account|used for|do)\b", q):
+        return "tax", {"mygov_basics"}, "mygov_basics"
+    if re.search(r"\b(tax resident|tax residency|resident for tax purposes|residency for tax)\b", q):
+        return "tax", {"tax_residency"}, "tax_residency"
+    if re.search(r"\bsuper(?:annuation)?\b", q) and re.search(r"\b(what|how|work|employer|contribution|visa holder)\b", q):
+        return "tax", {"super_basics"}, "super_basics"
+    if re.search(r"\btax return\b", q) and re.search(r"\b(how|where|lodge|file|submit|complete|online)\b", q):
+        return "tax", {"tax_lodge"}, "tax_lodge"
+    if re.search(r"\b(income tax|how tax works|why .*pay tax|tax on (?:my )?(?:income|pay|wages)|tax rates?)\b", q):
+        return "tax", {"tax_basics"}, "tax_basics"
     if re.search(r"\b(tax|ato|refund|super|mygov)\b", q):
         return "tax", set(), "unsupported_tax_intent"
     if re.search(r"\bvisa\b", q) and re.search(r"\b(status|progress|pending)\b", q) and re.search(r"\b(application|applied|lodged|online|immiaccount)\b", q):
@@ -103,6 +117,8 @@ def route_question(question: str, selected_topic: str) -> tuple[str | None, set[
         return "visa", {"visa_finder"}, "visa_finder"
     if re.search(r"\bvisitor visa\b", q) and re.search(r"\b(expire|expiring|expires|stay longer|extend|extension)\b", q):
         return "visa", {"visitor_stay_longer"}, "visitor_stay_longer"
+    if selected_topic == "visa" and re.search(r"\bgraduat(?:e|es|ed|ing|ion)\b", q) and re.search(r"\b(work|working|hours?|employment)\b", q):
+        return "visa", {"student_work_after_study"}, "student_work_after_study"
     student = bool(re.search(r"\b(students?|guardian|subclass 500|subclass 590)\b", q))
     dated_change = bool(re.search(r"\b(2 oct|oct 2|2 october|october 2)\b", q)) and "visa" in q
     post_study = asks_about_post_study(q) or broad_graduation_question(q)
@@ -111,7 +127,9 @@ def route_question(question: str, selected_topic: str) -> tuple[str | None, set[
             return "visa", set(), "unreviewed_change_date"
         if post_study:
             return "visa", {"student_post_study"}, "student_post_study"
-        if re.search(r"\b(work|working|hour|fee|cost|price|refund|processing|appeal|cancel)\b", q):
+        if re.search(r"\b(work|working|hours?|employment)\b", q):
+            return "visa", {"student_work"}, "student_work"
+        if re.search(r"\b(fee|cost|price|refund|processing|appeal|cancel)\b", q):
             return "visa", set(), "unsupported_visa_intent"
         if re.search(r"\b(family|partner|spouse|child|children|dependant|dependent|subsequent entrant)\b", q):
             return "visa", {"student_family"}, "student_family"

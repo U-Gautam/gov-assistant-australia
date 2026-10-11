@@ -284,5 +284,104 @@
     "body": "For Student visa processing times, use Home Affairs' processing-times guide and choose the relevant visa type, stream and application date. Its figures are based on recently decided applications; they do not guarantee a decision timeframe for your application. This reviewed note does not store an exact processing time.",
     "keywords": "exact current fee processing time times student visa subclass 500 guide recently decided",
     "reviewed_on": "2026-10-10"
+  },
+  {
+    "topic": "tax",
+    "intent": "tax_basics",
+    "agency": "myGov (Services Australia)",
+    "title": "How tax works and how much you pay",
+    "section": "Income tax basics",
+    "url": "https://my.gov.au/en/services/work/currently-employed/tax-when-you-work/paying-tax/how-tax-works-and-how-much-you-pay",
+    "body": "The ATO collects tax for the Australian Government. Most income you earn is taxable. If you work for an employer, they usually withhold tax from your pay; the amount depends on your income and circumstances. Check the ATO income tax rates or calculator linked from this official myGov page for a current estimate rather than relying on a fixed figure in this chat.",
+    "keywords": "what is income tax why pay tax how tax works tax on wages salary pay rates withheld employer calculator australia",
+    "reviewed_on": "2026-10-12"
+  },
+  {
+    "topic": "tax",
+    "intent": "tax_residency",
+    "agency": "myGov (Services Australia)",
+    "title": "Tax and superannuation as a visa holder",
+    "section": "Tax residency differs from visa status",
+    "url": "https://my.gov.au/en/services/living-arrangements/coming-to-australia/coming-to-australia-to-work/tax-and-superannuation-as-a-visa-holder",
+    "body": "Your residency status for Australian tax can be different from your visa or citizenship status. A visa holder can be an Australian resident for tax purposes. The amount of tax you pay depends on your circumstances, so use the ATO tax-residency guidance linked from this myGov page to assess your situation. This chat cannot determine your personal tax residency.",
+    "keywords": "am i tax resident international student visa holder tax residency temporary resident citizen resident for tax purposes",
+    "reviewed_on": "2026-10-12"
+  },
+  {
+    "topic": "tax",
+    "intent": "super_basics",
+    "agency": "myGov (Services Australia)",
+    "title": "Tax and superannuation as a visa holder",
+    "section": "What superannuation is for visa holders",
+    "url": "https://my.gov.au/en/services/living-arrangements/coming-to-australia/coming-to-australia-to-work/tax-and-superannuation-as-a-visa-holder",
+    "body": "Superannuation, or super, is retirement savings that most workers in Australia receive. Employers generally pay required super contributions into a super fund account. You can check and manage your super using your own ATO online services through myGov. Eligibility and amounts depend on your work circumstances; this chat cannot see your fund or balance.",
+    "keywords": "what is super superannuation how works employer contributions fund retirement visa holder international student",
+    "reviewed_on": "2026-10-12"
+  },
+  {
+    "topic": "tax",
+    "intent": "mygov_basics",
+    "agency": "myGov (Services Australia)",
+    "title": "About myGov",
+    "section": "Access linked government services",
+    "url": "https://my.gov.au/en/about",
+    "body": "myGov is an online account operated by Services Australia that provides access to linked government services in one place. You can choose which services to link, including the ATO. Some linked services send messages to a secure myGov Inbox. You can browse general information on the myGov website without signing in. This chatbot is separate from myGov and cannot access your account.",
+    "keywords": "what is mygov what can mygov do account government services ato link secure inbox how does mygov work works",
+    "reviewed_on": "2026-10-12"
+  },
+  {
+    "topic": "tax",
+    "intent": "mygov_create",
+    "agency": "myGov (Services Australia)",
+    "title": "Create a myGov account",
+    "section": "Create your own account securely",
+    "url": "https://my.gov.au/en/about/help/mygov-website/create-mygov-account",
+    "body": "To create a myGov account, use the official myGov website and select Create account. You need a personal email address only you can access, or a Digital ID. The email route asks you to verify your email and set up a password and multifactor authentication. Once the account exists, you can link services such as the ATO. Enter passwords, codes and identity details only on the official myGov site, never in this chat.",
+    "keywords": "how create make open set up sign up register mygov account email digital id password multifactor authentication",
+    "reviewed_on": "2026-10-12"
+  },
+  {
+    "topic": "tax",
+    "intent": "tax_lodge",
+    "agency": "myGov (Services Australia)",
+    "title": "What to do at tax time",
+    "section": "Lodge a tax return online through myGov",
+    "url": "https://my.gov.au/en/services/work/currently-employed/tax-when-you-work/tax-time/what-to-do-at-tax-time",
+    "body": "If you need to lodge a tax return, sign in to myGov and select the linked ATO service. In the ATO service, choose Tax, then Lodgments, then Income tax to view returns you need to lodge. First use the ATO need-to-lodge tool if you are unsure whether a return is required. This chat cannot lodge a return or access your tax account.",
+    "keywords": "how where lodge file submit complete tax return online mygov ato tax lodgments income tax",
+    "reviewed_on": "2026-10-12"
+  },
+  {
+    "topic": "tax",
+    "intent": "tax_nonlodgment",
+    "agency": "myGov (Services Australia)",
+    "title": "What to do at tax time",
+    "section": "Non-lodgment advice through myGov",
+    "url": "https://my.gov.au/en/services/work/currently-employed/tax-when-you-work/tax-time/what-to-do-at-tax-time",
+    "body": "If the ATO confirms you do not need to lodge a tax return, myGov says to submit a non-lodgment advice to the ATO. Sign in to myGov, select the linked ATO service, then Tax, Lodgments and Non-lodgment advice. Use the ATO need-to-lodge tool before deciding; additional Services Australia requirements may apply to your circumstances.",
+    "keywords": "non lodgment non-lodgment advice do not need to lodge tax return mygov ato tax lodgments",
+    "reviewed_on": "2026-10-12"
+  },
+  {
+    "topic": "visa",
+    "intent": "student_work",
+    "agency": "Department of Home Affairs",
+    "title": "Student visa (subclass 500)",
+    "section": "Work limits and checking visa conditions",
+    "url": "https://immi.homeaffairs.gov.au/visas/getting-a-visa/visa-listing/student-500",
+    "body": "Home Affairs states that Student visa holders can generally work up to 48 hours a fortnight while their course is in session. Exceptions and different rules can apply, including for certain research degree students and when the course is not in session. You cannot work before your course starts unless an exception applies. Check your own visa grant letter or VEVO for the conditions and work rights that apply to you; this chat cannot decide your individual entitlement.",
+    "keywords": "can i work working hours employment rights limit international student visa subclass 500 48 hours fortnight course session holidays vevo",
+    "reviewed_on": "2026-10-12"
+  },
+  {
+    "topic": "visa",
+    "intent": "student_work_after_study",
+    "agency": "Department of Home Affairs",
+    "title": "Check visa details and conditions",
+    "section": "Student visa work condition after course completion",
+    "url": "https://immi.homeaffairs.gov.au/visas/already-have-a-visa/check-visa-details-and-conditions/conditions-list",
+    "body": "Home Affairs condition 8105 limits Student visa work to 48 hours a fortnight while a course is in session. Its guidance says a course is not in session once the course listed on the Confirmation of Enrolment has been completed and the visa remains valid. The condition and any exceptions on your own visa must be checked in your grant letter or VEVO. Graduation alone does not extend a visa or establish work rights after it expires.",
+    "keywords": "how many hours work after graduation graduated graduating completed course student visa 48 hours fortnight 8105 vevo conditions expiry",
+    "reviewed_on": "2026-10-12"
   }
 ]
