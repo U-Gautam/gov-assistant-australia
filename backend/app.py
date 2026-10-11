@@ -275,6 +275,20 @@ def covers_route_details(answer: str, route: str) -> bool:
         return "mygov" in lowered and "manage tax returns" in lowered
     if route == "tax_basics":
         return "ato" in lowered and bool(re.search(r"\b(income|earn|pay)\b", lowered))
+    if route == "tax_free_threshold":
+        return "$18,200" in lowered and "resident" in lowered
+    if route == "tax_deductions":
+        return "deduction" in lowered and bool(re.search(r"\b(record|records|receipt|receipts)\b", lowered))
+    if route == "tax_due_date":
+        return "31 october" in lowered and bool(re.search(r"\b(most|generally|usually|may|agent)\b", lowered))
+    if route == "tax_prepare":
+        return "income" in lowered and bool(re.search(r"\b(record|records|deduction|deductions)\b", lowered))
+    if route == "tax_refund_time":
+        return bool(re.search(r"\b(?:2|two) weeks\b", lowered) and re.search(r"\b(most|typically|usually|longer|vary)\b", lowered))
+    if route == "tax_return_basics":
+        return "tax return" in lowered and "income" in lowered and "ato" in lowered
+    if route == "tax_visa_holder":
+        return "tax" in lowered and "visa" in lowered and "residen" in lowered
     if route == "tax_residency":
         return "visa" in lowered and "tax" in lowered and "resident" in lowered
     if route == "super_basics":
@@ -287,6 +301,20 @@ def covers_route_details(answer: str, route: str) -> bool:
         return "mygov" in lowered and "ato" in lowered and "lodgments" in lowered
     if route == "student_work":
         return "48 hours" in lowered and "vevo" in lowered and "course" in lowered
+    if route == "student_oshc":
+        return "oshc" in lowered and "cover" in lowered and "visa" in lowered
+    if route == "student_coe":
+        return "coe" in lowered and "valid" in lowered and "visa" in lowered
+    if route == "graduate_study_requirement":
+        return "485" in lowered and bool(re.search(r"\b(?:6|six) months\b", lowered)) and "study" in lowered
+    if route == "visa_address_update":
+        return "immiaccount" in lowered and "address" in lowered and "update" in lowered
+    if route == "visitor_apply":
+        return "visitor visa" in lowered and "stream" in lowered and "immiaccount" in lowered
+    if route == "student_visa_basics":
+        return "student visa" in lowered and "course" in lowered and bool(re.search(r"\b(coe|oshc)\b", lowered))
+    if route == "visitor_visa_basics":
+        return "visitor visa" in lowered and "visit" in lowered and "work" in lowered
     if route == "visa_vevo":
         return "vevo" in lowered and bool(re.search(r"\b(current|hold|held|granted)\b", lowered))
     if route == "visa_application_status":
@@ -334,14 +362,21 @@ def extractive_only_reason(question: str, route: str) -> str | None:
         return "personal_location_requires_official_check"
     if route == "student_work_after_study":
         return "post_study_work_rights_require_vevo"
+    if route == "graduate_study_requirement" and re.search(r"\b(can i|am i|do i|my)\b", question.lower()):
+        return "personal_graduate_visa_eligibility_requires_home_affairs_check"
     return {
         "tax_need_lodge": "personal_tax_assessment_requires_official_tool",
         "tax_residency": "personal_tax_residency_requires_official_check",
         "tax_nonlodgment": "personal_lodgment_status_requires_official_check",
+        "super_dasp": "personal_super_release_requires_ato_check",
+        "abn_basics": "business_and_visa_status_require_official_check",
         "visa_health": "individual_health_check_requires_immiaccount",
         "visitor_stay_longer": "personal_visa_options_require_official_check",
         "student_post_study": "personal_visa_options_require_official_check",
         "visa_fee_time": "live_values_require_official_tools",
+        "bridging_visa_basics": "personal_bridging_conditions_require_vevo",
+        "visa_refusal": "personal_review_rights_require_decision_notice",
+        "visa_refund": "personal_visa_refund_requires_home_affairs_check",
     }.get(route)
 
 

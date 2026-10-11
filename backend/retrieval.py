@@ -83,10 +83,31 @@ def route_question(question: str, selected_topic: str) -> tuple[str | None, set[
         return "tax", {"income_statement"}, "income_statement"
     if re.search(r"\bsuper(?:annuation)?\b", q) and re.search(r"\b(lost|missing|unclaimed)\b", q):
         return "tax", {"super_lost"}, "super_lost"
+    if re.search(r"\b(abn|australian business number)\b", q):
+        return "tax", {"abn_basics"}, "abn_basics"
+    if re.search(r"\bsuper(?:annuation)?\b", q) and re.search(r"\b(leave|leaving|depart|departing|back|withdraw|dasp)\b", q):
+        return "tax", {"super_dasp"}, "super_dasp"
     if re.search(r"\btax return\b", q) and re.search(r"\b(need|whether|must|should|required)\b", q) and re.search(r"\b(lodge|lodging|lodged)\b", q):
         return "tax", {"tax_need_lodge"}, "tax_need_lodge"
     if re.search(r"\btax return\b", q) and re.search(r"\b(progress|status|track|tracked|already lodged|checked|check)\b", q):
         return "tax", {"tax_return_progress"}, "tax_return_progress"
+    tax_refund = bool(re.search(r"\brefund\b", q) and not re.search(r"\bvisa\b", q))
+    if tax_refund and re.search(r"\b(check|track|status|progress)\b", q):
+        return "tax", {"tax_return_progress"}, "tax_return_progress"
+    if (tax_refund and re.search(r"\b(how long|when|get|arrive|receive|delay|processing time)\b", q)) or (
+        "tax return" in q and re.search(r"\b(how long|delay|processing time)\b", q)
+    ):
+        return "tax", {"tax_refund_time"}, "tax_refund_time"
+    if re.search(r"\b(tax return|tax time)\b", q) and re.search(r"\b(due|deadline|by when|last day)\b", q):
+        return "tax", {"tax_due_date"}, "tax_due_date"
+    if re.search(r"\b(tax return|tax time)\b", q) and re.search(r"\b(prepare|documents|information|records|before lodging)\b", q):
+        return "tax", {"tax_prepare"}, "tax_prepare"
+    if re.search(r"\b(tax[- ]?free threshold|earn tax[- ]?free|before (?:i )?pay tax)\b", q):
+        return "tax", {"tax_free_threshold"}, "tax_free_threshold"
+    if re.search(r"\b(tax|deduction|deductions)\b", q) and re.search(r"\b(deduction|deductions|expenses|receipts)\b", q):
+        return "tax", {"tax_deductions"}, "tax_deductions"
+    if re.search(r"\b(international students?|visa holders?|temporary residents?)\b", q) and re.search(r"\b(pay tax|tax on|taxed|income tax)\b", q):
+        return "tax", {"tax_visa_holder"}, "tax_visa_holder"
     if re.search(r"\b(?:non[- ]?lodg(?:e|ment)|do(?:n't| not) need to lodge)\b", q):
         return "tax", {"tax_nonlodgment"}, "tax_nonlodgment"
     if re.search(r"\bmygov\b", q) and re.search(r"\b(create|make|open|set up|sign up|register)\b", q):
@@ -99,10 +120,26 @@ def route_question(question: str, selected_topic: str) -> tuple[str | None, set[
         return "tax", {"super_basics"}, "super_basics"
     if re.search(r"\btax return\b", q) and re.search(r"\b(how|where|lodge|file|submit|complete|online)\b", q):
         return "tax", {"tax_lodge"}, "tax_lodge"
+    if re.search(r"\b(?:what is|what does|explain|meaning of)\s+(?:a\s+|the\s+)?tax return\b", q):
+        return "tax", {"tax_return_basics"}, "tax_return_basics"
     if re.search(r"\b(income tax|how tax works|why .*pay tax|tax on (?:my )?(?:income|pay|wages)|tax rates?)\b", q):
         return "tax", {"tax_basics"}, "tax_basics"
-    if re.search(r"\b(tax|ato|refund|super|mygov)\b", q):
+    if re.search(r"\bvisa\b", q) and re.search(r"\brefund\b", q) and not re.search(r"\btax\b", q):
+        return "visa", {"visa_refund"}, "visa_refund"
+    if re.search(r"\b(tax|ato|super|mygov)\b", q) or (tax_refund and not re.search(r"\bvisa\b", q)):
         return "tax", set(), "unsupported_tax_intent"
+    if re.search(r"\b(coe|confirmation of enrolment|confirmation of enrollment)\b", q):
+        return "visa", {"student_coe"}, "student_coe"
+    if re.search(r"\b(oshc|overseas student health cover|health insurance)\b", q) and re.search(r"\b(student|visa|oshc|overseas)\b", q):
+        return "visa", {"student_oshc"}, "student_oshc"
+    if re.search(r"\b(485|temporary graduate visa)\b", q) and re.search(r"\b(requirement|requirements|eligible|eligibility|qualify|how long|apply|application|after study)\b", q):
+        return "visa", {"graduate_study_requirement"}, "graduate_study_requirement"
+    if re.search(r"\b(visa|immiaccount)\b", q) and re.search(r"\b(address|contact details)\b", q) and re.search(r"\b(update|change|changed|new)\b", q):
+        return "visa", {"visa_address_update"}, "visa_address_update"
+    if re.search(r"\bvisa\b", q) and re.search(r"\b(refus(?:e|ed|al)|reject(?:ed|ion)?|denied|appeal|review rights)\b", q):
+        return "visa", {"visa_refusal"}, "visa_refusal"
+    if re.search(r"\b(bridging visa|bva)\b", q):
+        return "visa", {"bridging_visa_basics"}, "bridging_visa_basics"
     if re.search(r"\bvisa\b", q) and re.search(r"\b(status|progress|pending)\b", q) and re.search(r"\b(application|applied|lodged|online|immiaccount)\b", q):
         return "visa", {"visa_application_status"}, "visa_application_status"
     if re.search(r"\bvisa\b", q) and re.search(r"\b(condition|conditions|vevo)\b", q) and re.search(r"\b(hold|held|have|current|already|granted|vevo)\b", q):
@@ -117,6 +154,12 @@ def route_question(question: str, selected_topic: str) -> tuple[str | None, set[
         return "visa", {"visa_finder"}, "visa_finder"
     if re.search(r"\bvisitor visa\b", q) and re.search(r"\b(expire|expiring|expires|stay longer|extend|extension)\b", q):
         return "visa", {"visitor_stay_longer"}, "visitor_stay_longer"
+    if re.search(r"\bvisitor visa\b", q) and re.search(r"\b(apply|applying|submit|lodge|tourist)\b", q):
+        return "visa", {"visitor_apply"}, "visitor_apply"
+    if re.search(r"\b(?:what is|explain|meaning of)\s+(?:a\s+|the\s+)?visitor visa\b", q):
+        return "visa", {"visitor_visa_basics"}, "visitor_visa_basics"
+    if re.search(r"\b(?:what is|explain|meaning of)\s+(?:a\s+|the\s+)?student visa\b", q):
+        return "visa", {"student_visa_basics"}, "student_visa_basics"
     if selected_topic == "visa" and re.search(r"\bgraduat(?:e|es|ed|ing|ion)\b", q) and re.search(r"\b(work|working|hours?|employment)\b", q):
         return "visa", {"student_work_after_study"}, "student_work_after_study"
     student = bool(re.search(r"\b(students?|guardian|subclass 500|subclass 590)\b", q))

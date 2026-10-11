@@ -14,7 +14,7 @@ python3 -m venv .venv
 .venv/bin/uvicorn backend.app:app --host 127.0.0.1 --port 8000
 ```
 
-Open <http://127.0.0.1:8000/>. API documentation is at <http://127.0.0.1:8000/docs>. On first start, the application creates an ignored SQLite database and imports the 35 bundled notes. The app still works without a local model: supported questions return source extracts.
+Open <http://127.0.0.1:8000/>. API documentation is at <http://127.0.0.1:8000/docs>. On first start, the application creates an ignored SQLite database and imports the 54 bundled notes. The app still works without a local model: supported questions return source extracts.
 
 For optional local generation, [install Ollama](https://ollama.com/download), run `ollama pull qwen3:4b-instruct` and start Ollama. The default model connection is the loopback URL `http://127.0.0.1:11434/api/chat`. `OLLAMA_MODEL` selects an installed model; set it to an empty value to use extracts only. `OLLAMA_URL` can set another HTTP loopback `/api/chat` endpoint. The backend rejects remote model endpoints. No model weights or runtime database are stored in this repository.
 
@@ -38,7 +38,7 @@ The runner writes raw results to ignored `tests/runs/`. It does **not** judge fa
 
 ### Report test evidence and independent review
 
-[`tests/final-30-case-results-2026-10-10.csv`](tests/final-30-case-results-2026-10-10.csv) records the responses, retrieval details, response times and **provisional desk ratings** for the frozen 10 October evaluation: 29 normal synthetic questions and one model-outage case. Those ratings were AI-assisted and were **not** an independent human assessment. This CSV documents the evaluated 22-note build; the 10 October follow-up seeded 26 notes and the current website seeds 35 notes, so its answers may differ. The `raw_run_file` column points to run files held separately and is retained for provenance.
+[`tests/final-30-case-results-2026-10-10.csv`](tests/final-30-case-results-2026-10-10.csv) records the responses, retrieval details, response times and **provisional desk ratings** for the frozen 10 October evaluation: 29 normal synthetic questions and one model-outage case. Those ratings were AI-assisted and were **not** an independent human assessment. This CSV documents the evaluated 22-note build; the 10 October follow-up seeded 26 notes and the current website seeds 54 notes, so its answers may differ. The `raw_run_file` column points to run files held separately and is retained for provenance.
 
 [`tests/two-rater-review-blank-2026-10-10.csv`](tests/two-rater-review-blank-2026-10-10.csv) contains the same 30 cases with blank reviewer A/B columns. The [review guide](tests/two-rater-review-guide.md) explains how two people can assess answers independently before using `tests/calc_interrater_kappa.py`. No human ratings or agreement statistic are claimed here.
 

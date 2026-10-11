@@ -309,6 +309,8 @@ class BackendTests(unittest.TestCase):
             ("How will I know if I need a health examination for a Student visa?", "visa"),
             ("Can I stay longer in Australia when my Visitor visa is close to expiring?", "visa"),
             ("What is the exact current fee and processing time for a Student visa subclass 500?", "visa"),
+            ("Can I get a Temporary Graduate visa after study?", "visa"),
+            ("What happens if my Student visa application is refused?", "visa"),
         ):
             with self.subTest(question=question):
                 result = client.post("/api/chat", json={"question": question, "topic": topic}).json()
@@ -342,8 +344,42 @@ class BackendTests(unittest.TestCase):
                 self.assertIn(source_host, result["sources"][0]["url"])
                 self.assertEqual(route_question(question, topic)[2], route)
 
+    def test_expanded_index_covers_common_tax_and_visa_questions(self):
+        cases = (
+            ("How much can I earn tax-free in Australia?", "tax", "tax_free_threshold"),
+            ("Can I claim work expenses on my tax return?", "tax", "tax_deductions"),
+            ("When is my tax return due?", "tax", "tax_due_date"),
+            ("What documents do I need for my tax return?", "tax", "tax_prepare"),
+            ("What is a tax return?", "tax", "tax_return_basics"),
+            ("How long does a tax refund take?", "tax", "tax_refund_time"),
+            ("How do I check my tax refund?", "tax", "tax_return_progress"),
+            ("Can an international student get an ABN?", "tax", "abn_basics"),
+            ("Can I get my super back when I leave Australia?", "tax", "super_dasp"),
+            ("Do international students pay tax in Australia?", "tax", "tax_visa_holder"),
+            ("What is OSHC for a Student visa?", "visa", "student_oshc"),
+            ("What is a Student visa?", "visa", "student_visa_basics"),
+            ("Do I need health insurance for my Student visa?", "visa", "student_oshc"),
+            ("What is a Confirmation of Enrolment?", "visa", "student_coe"),
+            ("Can I get a Temporary Graduate visa after study?", "visa", "graduate_study_requirement"),
+            ("What is a bridging visa?", "visa", "bridging_visa_basics"),
+            ("How do I update my address for a visa application?", "visa", "visa_address_update"),
+            ("How do I apply for a Visitor visa?", "visa", "visitor_apply"),
+            ("What is a Visitor visa?", "visa", "visitor_visa_basics"),
+            ("What happens if my Student visa application is refused?", "visa", "visa_refusal"),
+            ("Can I get a student visa refund?", "visa", "visa_refund"),
+        )
+        for question, topic, route in cases:
+            with self.subTest(question=question):
+                result = self.client.post("/api/chat", json={"question": question, "topic": topic}).json()
+                self.assertEqual(route_question(question, topic)[2], route)
+                self.assertEqual(result["diagnostics"]["reason"], "matched")
+                self.assertTrue(result["evidence"])
+                self.assertIn(result["sources"][0]["url"].split("/")[2], {
+                    "my.gov.au", "www.ato.gov.au", "immi.homeaffairs.gov.au",
+                })
+
     def test_unknown_or_unsupported_question_does_not_guess(self):
-        for question in ("Can I get a student visa refund?", "What was the Student visa fee on 2 October 2026?"):
+        for question in ("Can you book my Student visa appointment?", "What was the Student visa fee on 2 October 2026?"):
             with self.subTest(question=question):
                 result = self.client.post("/api/chat", json={"question": question, "topic": "visa"}).json()
                 self.assertEqual(result["evidence"], [])
