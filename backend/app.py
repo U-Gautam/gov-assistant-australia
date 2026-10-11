@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import os
 import re
+import threading
 from pathlib import Path
 from typing import Callable, Literal
 from urllib.parse import urlparse
@@ -335,17 +336,20 @@ def create_app(
     database_path = db_path or os.getenv("GOV_ASSISTANT_DB_PATH", str(DEFAULT_DB))
     db = connect(database_path)
     seed_if_empty(db, seed_path)
+    db_lock = threading.Lock()
     api = FastAPI(title="Gov Assistant API", version="0.1.0")
     api.state.db = db
 
     @api.get("/api/health")
     def health() -> dict:
-        count = int(db.execute("SELECT COUNT(*) FROM source_chunks WHERE status='approved'").fetchone()[0])
+        with db_lock:
+            count = int(db.execute("SELECT COUNT(*) FROM source_chunks WHERE status='approved'").fetchone()[0])
         return {"status": "ok", "approved_source_notes": count, "ollama_model": model_name() or None, "ollama_connection_checked": False}
 
     @api.get("/api/sources")
     def sources() -> list[dict]:
-        return list_notes(db, "approved")
+        with db_lock:
+            return list_notes(db, "approved")
 
     @api.post("/api/chat")
     def chat(request: ChatRequest) -> dict:
@@ -363,7 +367,10 @@ def create_app(
                 "text": introduction_answer(intro), "sources": [], "mode": "guidance", "evidence": [],
                 "diagnostics": {"reason": intro, "retrieved": 0, "generation": "none"},
             }
-        evidence, reason = search_sources(db, question, request.topic)
+        # SQLite FTS5 uses this shared connection; keep simultaneous requests
+        # from stepping through its ranking cursor at the same time.
+        with db_lock:
+            evidence, reason = search_sources(db, question, request.topic)
         _, _, route = route_question(question, request.topic)
         if not evidence:
             starting_pages = [official_starting_page(question, request.topic)]

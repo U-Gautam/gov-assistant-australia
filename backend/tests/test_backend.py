@@ -4,6 +4,7 @@ import json
 import os
 import tempfile
 import unittest
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from unittest.mock import patch
 
@@ -215,6 +216,20 @@ class BackendTests(unittest.TestCase):
                     self.assertIn("Temporary Graduate visa", result["text"])
                     self.assertEqual(len(result["sources"]), 3)
                     self.assertTrue(all(source["url"].startswith("https://immi.homeaffairs.gov.au/") for source in result["sources"]))
+
+    def test_parallel_graduation_queries_share_sqlite_connection_safely(self):
+        app = create_app(Path(self.tmp.name) / "parallel.sqlite")
+
+        def request(index):
+            client = TestClient(app)
+            if index == 0:
+                return client.get("/api/health").json()["status"]
+            question = "graduation" if index % 2 else "I have graduated"
+            return client.post("/api/chat", json={"question": question, "topic": "tax"}).json()["diagnostics"]["reason"]
+
+        with ThreadPoolExecutor(max_workers=8) as pool:
+            results = list(pool.map(request, range(8)))
+        self.assertEqual(results, ["ok"] + ["matched"] * 7)
 
     def test_october_student_changes_are_answered_with_evidence(self):
         result = self.client.post("/api/chat", json={
