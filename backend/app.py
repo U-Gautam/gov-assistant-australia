@@ -397,7 +397,8 @@ def create_app(
     def health() -> dict:
         with db_lock:
             count = int(db.execute("SELECT COUNT(*) FROM source_chunks WHERE status='approved'").fetchone()[0])
-        return {"status": "ok", "approved_source_notes": count, "ollama_model": model_name() or None, "ollama_connection_checked": False}
+            pages = int(db.execute("SELECT COUNT(DISTINCT url) FROM source_chunks WHERE status='approved'").fetchone()[0])
+        return {"status": "ok", "approved_source_notes": count, "indexed_source_pages": pages, "ollama_model": model_name() or None, "ollama_connection_checked": False}
 
     @api.get("/api/sources")
     def sources() -> list[dict]:
@@ -459,7 +460,12 @@ def create_app(
                 }
         mode = "extractive"
         answer = extractive_answer(evidence)
-        controlled_reason = extractive_only_reason(question, route)
+        # A broad match has no route-specific answer validator. Show the
+        # approved source text directly rather than asking the model to infer.
+        controlled_reason = (
+            "broad_search_source_extract" if reason == "matched_broad"
+            else extractive_only_reason(question, route)
+        )
         fallback_reason = controlled_reason or "ollama_not_configured"
         generator = answer_generator
         if generator is None and model_name():

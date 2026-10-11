@@ -273,8 +273,9 @@ function updateSiteStatus() {
     return;
   }
   const count=Number.isInteger(healthInfo?.approved_source_notes) ? healthInfo.approved_source_notes : indexedSources.length;
+  const pages=Number.isInteger(healthInfo?.indexed_source_pages) ? healthInfo.indexed_source_pages : new Set(indexedSources.map(item=>item.url)).size;
   const latest=indexedSources.map(item=>item.reviewed_on).filter(value=>/^\d{4}-\d{2}-\d{2}$/.test(value || '')).sort().at(-1);
-  const parts=[`${count} indexed source ${count===1?'note':'notes'}`];
+  const parts=[`${count} indexed source ${count===1?'note':'notes'} from ${pages} government ${pages===1?'page':'pages'}`];
   if (latest) parts.push(`latest note date ${formatDate(latest)}`);
   parts.push(healthInfo?.ollama_model ? `local model configured: ${healthInfo.ollama_model}` : 'source-extract mode available');
   siteStatus.textContent=parts.join(' · ');

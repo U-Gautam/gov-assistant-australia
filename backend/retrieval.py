@@ -8,7 +8,7 @@ import sqlite3
 
 
 STOP_WORDS = set(
-    "a about an and are as at be by can could do does for from have how i in is it me my of on or our the their there these this to was were what when where which while who with you your"
+    "a about an and are as at be by can could do does for from have how i in is it me my of on or our should the their there these this to was were what when where which while who with you your"
     .split()
 )
 FOLD = {
@@ -17,12 +17,38 @@ FOLD = {
     "rules": "rule", "applications": "application", "applying": "apply",
     "lodged": "lodge", "lodging": "lodge", "transferring": "transfer",
     "providers": "provider", "children": "child", "dependants": "dependant",
+    "visitors": "visitor", "expenses": "expense", "records": "record",
+    "allowed": "allow",
 }
+
+# A broad match needs more than words found on almost every page. The narrow
+# routes below still take precedence for dates, eligibility and other cases.
+BROAD_NOISE = {
+    "australia", "australian", "tax", "visa", "student", "ato", "government",
+    "information", "question", "help", "get", "find", "please", "tell", "know",
+}
+BROAD_RESTRICTED = re.compile(
+    r"\b(?:am i|can i|could i|do i|my|mine|approve|approval|guarantee|"
+    r"book|appointment|exact|current|latest|today|now|fee|fees|cost|price|"
+    r"charge|processing time|recent|changed|changes|updated|eligible|eligibility|"
+    r"status|decision|refund|appeal|personal|account|number)\b"
+)
+BROAD_OUTSIDE_SCOPE = re.compile(r"\b(?:passport|citizenship|centrelink|medicare|council)\b")
 
 
 def terms(value: str) -> list[str]:
     words = re.findall(r"[a-z0-9]+", value.lower())
     return list(dict.fromkeys(FOLD.get(word, word) for word in words if word not in STOP_WORDS))
+
+
+def broad_terms(question: str, route: str) -> list[str]:
+    """Permit an evidence-only search for specific, non-personal questions."""
+    if route not in {"unsupported_tax_intent", "unsupported_visa_intent", "outside_scope"}:
+        return []
+    if BROAD_RESTRICTED.search(question.lower()) or BROAD_OUTSIDE_SCOPE.search(question.lower()):
+        return []
+    useful = [word for word in terms(question) if word not in BROAD_NOISE]
+    return useful if len(useful) >= 2 else []
 
 
 def asks_about_other_october_change(question: str) -> bool:
@@ -194,23 +220,30 @@ def search_sources(
     connection: sqlite3.Connection, question: str, topic: str = "tax", limit: int = 5
 ) -> tuple[list[dict], str]:
     domain, allowed_intents, route = route_question(question, topic)
-    if not allowed_intents or domain is None:
+    broad = not allowed_intents and domain is not None
+    query_terms = broad_terms(question, route) if broad else terms("graduation" if broad_graduation_question(question) else question)
+    if not query_terms or domain is None:
         return [], route
-    query_terms = terms("graduation" if broad_graduation_question(question) else question)
-    if not query_terms:
-        return [], "no_search_terms"
     # Quoting every token makes user input data, never FTS query syntax.
     match = " OR ".join(f'"{word}"' for word in query_terms)
-    intent_marks = ",".join("?" for _ in allowed_intents)
+    intent_filter = ""
+    params: tuple = (match, domain)
+    if not broad:
+        intent_marks = ",".join("?" for _ in allowed_intents)
+        intent_filter = f" AND c.intent IN ({intent_marks})"
+        params += tuple(sorted(allowed_intents))
     rows = connection.execute(
         f"""SELECT c.*, bm25(source_fts, 2.5, 1.3, 1.0, 1.8) AS fts_rank
              FROM source_fts JOIN source_chunks AS c ON c.id = source_fts.rowid
              WHERE source_fts MATCH ? AND c.status='approved' AND c.topic=?
-                   AND c.intent IN ({intent_marks})
-             ORDER BY fts_rank LIMIT 20""",
-        (match, domain, *sorted(allowed_intents)),
+                   {intent_filter}
+             ORDER BY fts_rank LIMIT 40""",
+        params,
     ).fetchall()
-    required = 1 if len(query_terms) == 1 else max(2, math.ceil(len(query_terms) * 0.5))
+    required = (
+        max(2, math.ceil(len(query_terms) * 0.75)) if broad
+        else 1 if len(query_terms) == 1 else max(2, math.ceil(len(query_terms) * 0.5))
+    )
     results = []
     for row in rows:
         haystack = set(terms(" ".join(str(row[field]) for field in ("title", "section", "body", "keywords"))))
@@ -230,4 +263,6 @@ def search_sources(
         ) else 1,
         -item["term_overlap"], item["fts_rank"],
     ))
-    return results[:limit], "matched" if results else "weak_or_no_match"
+    if not results:
+        return [], route if broad else "weak_or_no_match"
+    return results[: min(limit, 3) if broad else limit], "matched_broad" if broad else "matched"

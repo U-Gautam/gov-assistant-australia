@@ -34,6 +34,10 @@ class BackendTests(unittest.TestCase):
         self.assertEqual(len(notes), SEED_COUNT)
         self.assertTrue(all(date.fromisoformat(note["reviewed_on"]) <= date.today() for note in notes))
         self.assertEqual(self.client.get("/api/health").json()["approved_source_notes"], SEED_COUNT)
+        self.assertEqual(
+            self.client.get("/api/health").json()["indexed_source_pages"],
+            len({note["url"] for note in notes}),
+        )
 
     def test_greetings_and_help_explain_scope_without_false_refusal_or_source_claim(self):
         app = create_app(
@@ -377,6 +381,61 @@ class BackendTests(unittest.TestCase):
                 self.assertIn(result["sources"][0]["url"].split("/")[2], {
                     "my.gov.au", "www.ato.gov.au", "immi.homeaffairs.gov.au",
                 })
+
+    def test_broad_search_uses_new_notes_without_a_hard_coded_route(self):
+        app = create_app(
+            Path(self.tmp.name) / "broad.sqlite",
+            answer_generator=lambda _q, _notes: self.fail("Broad matches must not call the model"),
+        )
+        client = TestClient(app)
+        for question, topic, expected_url in (
+            (
+                "Are visitors allowed to work in Australia?", "visa",
+                "https://immi.homeaffairs.gov.au/visas/working-in-australia/work-rights-and-exploitation/work-restrictions",
+            ),
+            (
+                "What records should I keep for work expenses?", "tax",
+                "https://my.gov.au/en/services/work/currently-employed/tax-when-you-work/tax-time/prepare-for-tax-time",
+            ),
+        ):
+            with self.subTest(question=question):
+                result = client.post("/api/chat", json={"question": question, "topic": topic}).json()
+                self.assertEqual(result["mode"], "extractive")
+                self.assertEqual(result["diagnostics"]["reason"], "matched_broad")
+                self.assertEqual(result["diagnostics"]["generation"], "broad_search_source_extract")
+                self.assertTrue(result["evidence"])
+                self.assertEqual(result["sources"][0]["url"], expected_url)
+
+    def test_broad_search_rejects_unrelated_and_sensitive_requests(self):
+        for question, topic in (
+            ("What is the weather and train timetable?", "visa"),
+            ("Can you approve my Visitor visa application?", "visa"),
+            ("What is the exact current Visitor visa fee?", "visa"),
+        ):
+            with self.subTest(question=question):
+                result = self.client.post("/api/chat", json={"question": question, "topic": topic}).json()
+                self.assertEqual(result["evidence"], [])
+
+    def test_broad_search_excludes_pending_notes_until_approval(self):
+        note = {
+            "topic": "visa", "intent": "provider_default", "agency": "Department of Home Affairs",
+            "title": "Education provider default", "section": "Tuition protection after provider default",
+            "url": "https://immi.homeaffairs.gov.au/visas/getting-a-visa/visa-listing/student-500/education-provider-default",
+            "body": "If an education provider defaults, students may be offered an alternative course or a refund of unspent prepaid tuition fees. The Tuition Protection Service can help in certain situations.",
+            "keywords": "tuition protection provider default alternative course refund",
+            "reviewed_on": "2026-10-12",
+        }
+        note_id, status = stage_note(self.app.state.db, note)
+        self.assertEqual(status, "pending")
+        question = "What tuition protection applies after provider default?"
+        payload = {"question": question, "topic": "visa"}
+        before = self.client.post("/api/chat", json=payload).json()
+        self.assertEqual(before["evidence"], [])
+        approve_note(self.app.state.db, note_id)
+        after = self.client.post("/api/chat", json=payload).json()
+        self.assertEqual(after["diagnostics"]["reason"], "matched_broad")
+        self.assertEqual(after["mode"], "extractive")
+        self.assertEqual(after["sources"][0]["url"], note["url"])
 
     def test_unknown_or_unsupported_question_does_not_guess(self):
         for question in ("Can you book my Student visa appointment?", "What was the Student visa fee on 2 October 2026?"):

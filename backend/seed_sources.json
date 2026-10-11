@@ -592,5 +592,16 @@
     "body": "Home Affairs does not usually refund a visa application charge because an application was refused, withdrawn or unsuccessful. Limited circumstances may qualify for a refund; the official page explains when and how to request one. This chatbot cannot assess your payment or decide whether your Student visa charge is refundable.",
     "keywords": "can i get student visa refund application charge vac refused withdrawn unsuccessful eligible claim request",
     "reviewed_on": "2026-10-12"
+  },
+  {
+    "topic": "visa",
+    "intent": "visitor_work_restrictions",
+    "agency": "Department of Home Affairs",
+    "title": "Work restrictions",
+    "section": "Visitor visas and work rights",
+    "url": "https://immi.homeaffairs.gov.au/visas/working-in-australia/work-rights-and-exploitation/work-restrictions",
+    "body": "Home Affairs says a Visitor visa or Electronic Travel Authority (ETA) does not allow work in Australia. Other visas may limit the type or amount of work a person can do. Visa holders should check their own conditions in VEVO. This chat cannot inspect a person's visa or determine individual work rights.",
+    "keywords": "visitor visa visitors work australia working employment rights restrictions eta vevo",
+    "reviewed_on": "2026-10-12"
   }
 ]
