@@ -2,6 +2,8 @@
 
 This repository contains the locally run application and its test code. The interface uses HTML, CSS and JavaScript. A Python FastAPI service routes questions, searches short source notes with SQLite FTS5 and optional local semantic matching, and can ask a locally running, pretrained Qwen3 4B model through Ollama to summarise the retrieved notes. The model was not fine-tuned for this project. The API checks generated citations, dates and route details, and can return a labelled source extract when generation is unavailable or rejected.
 
+Version `v1.1` includes the latest local website changes. See the [changelog](CHANGELOG.md) for what changed and how it was checked.
+
 The assistant covers selected Australian tax and visa information. It is an academic information tool, **not an official government service or a source of personal advice**. The bundled notes are indexed project material; an active note does not imply that a government agency or named reviewer has approved its wording. Check linked official pages for current rules before using or demonstrating an answer.
 
 ## Start the application

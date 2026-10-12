@@ -62,7 +62,7 @@ def source_items(evidence: list[dict]) -> list[dict]:
 def extractive_answer(evidence: list[dict]) -> str:
     """Transparent fallback: show indexed notes without pretending to use AI."""
     if not evidence:
-        return "I don't have a matching source note for that question yet. Start with the official page linked below."
+        return "I can't answer that from the government information currently included here. Check the official page linked below for current details."
     checked = max(item["reviewed_on"] for item in evidence)
     lines = [f"From indexed official-source notes dated {checked}:"]
     lines.extend(f"{item['body']} [{index}]" for index, item in enumerate(evidence, 1))
@@ -204,7 +204,7 @@ def official_starting_page(question: str, topic: str) -> dict:
         return {"label": "Official starting page — ATO tax file numbers", "url": "https://www.ato.gov.au/individuals-and-families/tax-file-number/what-is-a-tax-file-number"}
     if re.search(r"\b(graduate visa|temporary graduate visa|subclass 485)\b", q):
         return {"label": "Official starting page — Home Affairs Temporary Graduate visa", "url": "https://immi.homeaffairs.gov.au/visas/getting-a-visa/visa-listing/temporary-graduate-485"}
-    if re.search(r"\b(tax|ato|refund|super|mygov)\b", q) or topic == "tax" and not re.search(r"\b(visa|student|visitor|immigration)\b", q):
+    if re.search(r"\b(tax|taxes|ato|refund|super|mygov)\b", q) or topic == "tax" and not re.search(r"\b(visa|student|visitor|immigration)\b", q):
         return {"label": "Official starting page — Australian Taxation Office", "url": "https://www.ato.gov.au/"}
     if re.search(r"\b(fee|cost|price|charge)\b", q):
         return {"label": "Official starting page — Home Affairs Visa Pricing Estimator", "url": "https://immi.homeaffairs.gov.au/visas/visa-pricing-estimator"}
@@ -386,12 +386,15 @@ def extractive_only_reason(question: str, route: str) -> str | None:
         "tax_bill_prevention": "personal_tax_bill_requires_ato_check",
         "tax_residency": "personal_tax_residency_requires_official_check",
         "tax_nonlodgment": "personal_lodgment_status_requires_official_check",
+        "help_loan_withholding": "personal_loan_withholding_requires_ato_check",
+        "tax_work_from_home": "personal_deduction_requires_ato_check",
         "super_dasp": "personal_super_release_requires_ato_check",
         "abn_basics": "business_and_visa_status_require_official_check",
         "visa_health": "individual_health_check_requires_immiaccount",
         "visitor_stay_longer": "personal_visa_options_require_official_check",
         "student_post_study": "personal_visa_options_require_official_check",
         "visa_fee_time": "live_values_require_official_tools",
+        "visa_vevo": "personal_visa_expiry_requires_vevo_check",
         "bridging_visa_basics": "personal_bridging_conditions_require_vevo",
         "bridging_visa_travel": "personal_bridging_travel_rights_require_home_affairs_check",
         "student_visa_length": "personal_visa_expiry_requires_grant_or_vevo_check",

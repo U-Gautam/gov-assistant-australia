@@ -545,7 +545,7 @@ class BackendTests(unittest.TestCase):
                 self.assertEqual(result["evidence"], [])
                 self.assertEqual(len(result["sources"]), 1)
                 self.assertTrue(result["sources"][0]["label"].startswith("Official starting page"))
-                self.assertIn("don't have a matching source note", result["text"])
+                self.assertIn("can't answer that from the government information", result["text"])
 
     def test_unclear_fragments_ask_for_clarification_without_false_source_link(self):
         for question in ("aaaaa", "adsdfdsfsfd", "foo bar baz", "???"):
@@ -562,6 +562,36 @@ class BackendTests(unittest.TestCase):
         result = self.client.post("/api/chat", json={"question": "Newcastle bins", "topic": "tax"}).json()
         self.assertEqual(result["diagnostics"]["reason"], "outside_scope")
         self.assertTrue(result["sources"])
+
+    def test_common_paraphrases_find_their_existing_reviewed_notes(self):
+        examples = (
+            ("Do I need HELP loan withholding?", "help_loan_withholding", "HELP"),
+            ("Can I claim working from home expenses?", "tax_work_from_home", "working from home"),
+            ("How can I check whether my visa is valid?", "visa_vevo", "VEVO"),
+        )
+        for question, intent, expected_text in examples:
+            with self.subTest(question=question):
+                self.assertEqual(route_question(question, "visa")[2], intent)
+                result = self.client.post("/api/chat", json={"question": question, "topic": "visa"}).json()
+                self.assertEqual(result["diagnostics"]["reason"], "matched")
+                self.assertTrue(result["evidence"])
+                self.assertIn(expected_text.lower(), result["text"].lower())
+                self.assertTrue(result["sources"])
+
+    def test_plural_taxes_uses_ato_referral_even_when_visa_topic_is_selected(self):
+        result = self.client.post("/api/chat", json={
+            "question": "How do I pay my taxes?", "topic": "visa",
+        }).json()
+        self.assertEqual(result["diagnostics"]["reason"], "unsupported_tax_intent")
+        self.assertEqual(result["evidence"], [])
+        self.assertIn("ato.gov.au", result["sources"][0]["url"])
+
+    def test_course_change_does_not_use_provider_transfer_rules(self):
+        result = self.client.post("/api/chat", json={
+            "question": "Can I change my course?", "topic": "visa",
+        }).json()
+        self.assertEqual(result["evidence"], [])
+        self.assertNotIn("12 months", result["text"])
 
     def test_sensitive_unsupported_questions_explain_the_boundary(self):
         examples = (

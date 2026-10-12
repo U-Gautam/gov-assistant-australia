@@ -2,7 +2,7 @@
 
 This records changes to the independent tax and visa assistant. The submitted report is separate from this website.
 
-## Pending review — 12 October 2026
+## v1.1 — 12 October 2026
 
 - Matched three common phrasings to government-source notes already in the index: HELP loan withholding, working-from-home expenses, and checking whether a held visa is still valid in VEVO. These routes work even when the other topic is selected in the browser.
 - Routed “taxes” to the tax topic, so a question about paying taxes no longer points to Home Affairs when the visa topic happens to be selected. The assistant still avoids inventing payment steps it has not indexed.
@@ -10,7 +10,7 @@ This records changes to the independent tax and visa assistant. The submitted re
 - Made the no-source response clearer for a genuine question. Personal HELP withholding, home-office deduction and visa-expiry questions now show the reviewed source extract and official link instead of asking the model to decide an individual's case.
 - Added regression checks for these cases. **44 backend tests pass.** No new source pages or notes were added in this round.
 
-The website code changes in this section are available in the local working copy for review. Publishing this changelog does not publish that code. The Cloudflare tunnel remains off.
+This release includes the website code changes above. The temporary Cloudflare link serves the local site while its server and tunnel are running.
 
 ## Previously completed — 12 October 2026
 

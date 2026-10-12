@@ -14,7 +14,7 @@ STOP_WORDS = set(
     .split()
 )
 FOLD = {
-    "oct": "october", "visas": "visa", "students": "student", "families": "family",
+    "oct": "october", "visas": "visa", "students": "student", "families": "family", "taxes": "tax",
     "changes": "change", "changed": "change", "changing": "change", "recent": "change",
     "rules": "rule", "applications": "application", "applying": "apply",
     "lodged": "lodge", "lodging": "lodge", "transferring": "transfer",
@@ -41,7 +41,8 @@ BROAD_RESTRICTED = re.compile(
     r"\b(?:approve|approval|guarantee|"
     r"book|appointment|exact|current|latest|today|now|fee|fees|cost|price|"
     r"charge|processing time|recent|changed|changes|updated|eligible|eligibility|"
-    r"status|decision|refund|appeal|personal|number|qualify|qualification)\b"
+    r"status|decision|refund|appeal|personal|number|qualify|qualification|"
+    r"change\s+(?:my\s+)?course)\b"
 )
 BROAD_OUTSIDE_SCOPE = re.compile(r"\b(?:passport|citizenship|centrelink|medicare|council)\b")
 SAFE_BROAD_ROUTES = {
@@ -112,6 +113,14 @@ def asks_about_provider_transfer(question: str) -> bool:
 def route_question(question: str, selected_topic: str) -> tuple[str | None, set[str], str]:
     """Recognise only the small set of processes for which reviewed notes exist."""
     q = question.lower()
+    if re.search(r"\b(?:help|hecs|study)\s+(?:loan|debt)\b", q) and re.search(
+        r"\b(withhold(?:ing)?|repay(?:ment|ments)?|pay|employer)\b", q
+    ):
+        return "tax", {"help_loan_withholding"}, "help_loan_withholding"
+    if re.search(r"\b(?:work(?:ing)? from home|home office)\b", q) and re.search(
+        r"\b(claim|deduct(?:ion)?|expenses?|tax|records?|method)\b", q
+    ):
+        return "tax", {"tax_work_from_home"}, "tax_work_from_home"
     if re.search(r"\b(tfn|tax file number|tax number)\b", q):
         if re.search(r"\b(lost|forgot|forgotten|misplaced|recover|existing|find)\b", q):
             return "tax", {"tfn_find"}, "tfn_find"
@@ -176,7 +185,7 @@ def route_question(question: str, selected_topic: str) -> tuple[str | None, set[
         return "tax", {"tax_basics"}, "tax_basics"
     if re.search(r"\bvisa\b", q) and re.search(r"\brefund\b", q) and not re.search(r"\btax\b", q):
         return "visa", {"visa_refund"}, "visa_refund"
-    if re.search(r"\b(tax|ato|super|mygov)\b", q) or (tax_refund and not re.search(r"\bvisa\b", q)):
+    if re.search(r"\b(tax|taxes|ato|super|mygov)\b", q) or (tax_refund and not re.search(r"\bvisa\b", q)):
         return "tax", set(), "unsupported_tax_intent"
     if re.search(r"\b(coe|confirmation of enrolment|confirmation of enrollment)\b", q):
         return "visa", {"student_coe"}, "student_coe"
@@ -194,6 +203,10 @@ def route_question(question: str, selected_topic: str) -> tuple[str | None, set[
         return "visa", {"bridging_visa_basics"}, "bridging_visa_basics"
     if re.search(r"\bvisa\b", q) and re.search(r"\b(status|progress|pending)\b", q) and re.search(r"\b(application|applied|lodged|online|immiaccount)\b", q):
         return "visa", {"visa_application_status"}, "visa_application_status"
+    if re.search(r"\bvisa\b", q) and re.search(r"\b(check|see|find)\b", q) and re.search(
+        r"\b(valid|validity|expiry|expire|expires|expiration)\b", q
+    ):
+        return "visa", {"visa_vevo"}, "visa_vevo"
     if re.search(r"\bvisa\b", q) and re.search(r"\b(condition|conditions|vevo)\b", q) and re.search(r"\b(hold|held|have|current|already|granted|vevo)\b", q):
         return "visa", {"visa_vevo"}, "visa_vevo"
     if re.search(r"\bvisa\b", q) and re.search(r"\b(passport|travel document)\b", q) and re.search(r"\b(update|change|changed)\b", q) and re.search(r"\b(application|applied|lodged|lodging)\b", q):
