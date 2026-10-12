@@ -1,12 +1,12 @@
 # Australian government information assistant
 
-This repository contains the locally run application and its test code. The interface uses HTML, CSS and JavaScript. A Python FastAPI service routes questions, searches short source notes with SQLite FTS5 and can ask a locally running, pretrained Qwen3 4B model through Ollama to summarise the retrieved notes. The model was not fine-tuned for this project. The API checks generated citations, dates and route details, and can return a labelled source extract when generation is unavailable or rejected.
+This repository contains the locally run application and its test code. The interface uses HTML, CSS and JavaScript. A Python FastAPI service routes questions, searches short source notes with SQLite FTS5 and optional local semantic matching, and can ask a locally running, pretrained Qwen3 4B model through Ollama to summarise the retrieved notes. The model was not fine-tuned for this project. The API checks generated citations, dates and route details, and can return a labelled source extract when generation is unavailable or rejected.
 
 The assistant covers selected Australian tax and visa information. It is an academic information tool, **not an official government service or a source of personal advice**. The bundled notes are indexed project material; an active note does not imply that a government agency or named reviewer has approved its wording. Check linked official pages for current rules before using or demonstrating an answer.
 
 ## Start the application
 
-Use Python 3.10 or later from this directory:
+Use Python 3.9 or later from this directory:
 
 ```sh
 python3 -m venv .venv
@@ -14,11 +14,11 @@ python3 -m venv .venv
 .venv/bin/uvicorn backend.app:app --host 127.0.0.1 --port 8000
 ```
 
-Open <http://127.0.0.1:8000/>. API documentation is at <http://127.0.0.1:8000/docs>. On first start, the application creates an ignored SQLite database and imports the 71 bundled notes from 55 distinct official pages. The app still works without a local model: supported questions return source extracts. Specific rules protect sensitive or time-dependent questions; other general questions can search all approved notes using a stricter relevance check and return labelled extracts.
+Open <http://127.0.0.1:8000/>. API documentation is at <http://127.0.0.1:8000/docs>. On first start, the application creates an ignored SQLite database and imports the 71 bundled notes from 55 distinct official pages. The app still works without a local model: supported questions return source extracts. Specific rules protect sensitive or time-dependent questions; other general questions can search all approved notes by keywords or, when enabled, high-confidence local semantic similarity. Broad matches return labelled source extracts.
 
-For optional local generation, [install Ollama](https://ollama.com/download), run `ollama pull qwen3:4b-instruct` and start Ollama. The default model connection is the loopback URL `http://127.0.0.1:11434/api/chat`. `OLLAMA_MODEL` selects an installed model; set it to an empty value to use extracts only. `OLLAMA_URL` can set another HTTP loopback `/api/chat` endpoint. The backend rejects remote model endpoints. No model weights or runtime database are stored in this repository.
+For optional local generation, [install Ollama](https://ollama.com/download), run `ollama pull qwen3:4b-instruct` and `ollama pull nomic-embed-text`, then start Ollama. Qwen generates answers; Nomic helps match differently worded questions to notes. If Nomic is absent, keyword search still works. Restart the service after installing it, or set `OLLAMA_EMBED_MODEL` to an empty value to disable semantic matching. The default model connection is the loopback URL `http://127.0.0.1:11434/api/chat`. `OLLAMA_MODEL` selects an installed model; set it to an empty value to use extracts only. `OLLAMA_URL` can set another HTTP loopback `/api/chat` endpoint. The backend rejects remote model endpoints. No model weights or runtime database are stored in this repository.
 
-The browser keeps chat history and optional helpfulness choices in that browser's local storage; the SQLite database stores public source notes, not conversations. `GET /api/sources` lists indexed notes and `GET /api/health` shows the active count and model setting.
+The browser keeps chat history and optional helpfulness choices in that browser's local storage; the SQLite database stores public source notes, not conversations. `GET /api/sources` lists indexed notes and `GET /api/health` shows the active count, model setting and whether semantic search is available.
 
 ## Check the code
 

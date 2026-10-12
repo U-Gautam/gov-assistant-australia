@@ -6,9 +6,11 @@ import math
 import re
 import sqlite3
 
+from .semantic import SemanticIndex
+
 
 STOP_WORDS = set(
-    "a about an and are as at be before by can could do does for from have how i if in is it me might my of on or our should the their there these this to was were what when where which while who with you your"
+    "a about an and are as at be before by can could do does down for from have how i if in is it me might my of on or our should that the their there these this to was were what when where which while who with you your"
     .split()
 )
 FOLD = {
@@ -21,6 +23,11 @@ FOLD = {
     "allowed": "allow", "jobs": "job", "coming": "come", "steps": "step",
     "long": "length", "last": "length",
     "studying": "study", "studied": "study", "defaults": "default",
+    "merge": "combine", "retirement": "super", "accounts": "account",
+    "funds": "fund", "together": "combine", "boss": "employer",
+    "letters": "message", "letter": "message", "messages": "message",
+    "college": "provider", "colleges": "provider", "shuts": "closes", "shut": "closes", "closed": "closes",
+    "fix": "amend", "filed": "lodge",
 }
 
 # A broad match needs more than words found on almost every page. The narrow
@@ -28,12 +35,13 @@ FOLD = {
 BROAD_NOISE = {
     "australia", "australian", "tax", "visa", "student", "ato", "government",
     "information", "question", "help", "get", "find", "please", "tell", "know", "cause", "happens",
+    "says", "true", "several", "put", "already", "online", "home", "they",
 }
 BROAD_RESTRICTED = re.compile(
     r"\b(?:approve|approval|guarantee|"
     r"book|appointment|exact|current|latest|today|now|fee|fees|cost|price|"
     r"charge|processing time|recent|changed|changes|updated|eligible|eligibility|"
-    r"status|decision|refund|appeal|personal|number)\b"
+    r"status|decision|refund|appeal|personal|number|qualify|qualification)\b"
 )
 BROAD_OUTSIDE_SCOPE = re.compile(r"\b(?:passport|citizenship|centrelink|medicare|council)\b")
 SAFE_BROAD_ROUTES = {
@@ -71,7 +79,7 @@ def asks_about_post_study(question: str) -> bool:
     """Recognise graduation plans without treating a college as a provider transfer."""
     context = re.search(r"\b(international|overseas|australia|australian|visa)\b", question)
     graduation = re.search(r"\bgraduat(?:e|es|ed|ing|ion)\b", question) and not re.search(
-        r"\bgraduate\s+(student|course|degree|program)\b", question
+        r"\bgraduate\s+(student|course|degree|program|visa)\b", question
     )
     completed_course = (
         re.search(r"\b(complet(?:e|ed|ing)|finish(?:ed|ing)?)\b", question)
@@ -104,7 +112,7 @@ def asks_about_provider_transfer(question: str) -> bool:
 def route_question(question: str, selected_topic: str) -> tuple[str | None, set[str], str]:
     """Recognise only the small set of processes for which reviewed notes exist."""
     q = question.lower()
-    if re.search(r"\b(tfn|tax file number)\b", q):
+    if re.search(r"\b(tfn|tax file number|tax number)\b", q):
         if re.search(r"\b(lost|forgot|forgotten|misplaced|recover|existing|find)\b", q):
             return "tax", {"tfn_find"}, "tfn_find"
         if re.search(r"\b(apply|applying|get|obtain|new|free|cost)\b", q):
@@ -151,11 +159,14 @@ def route_question(question: str, selected_topic: str) -> tuple[str | None, set[
         return "tax", {"tax_nonlodgment"}, "tax_nonlodgment"
     if re.search(r"\bmygov\b", q) and re.search(r"\b(create|make|open|set up|sign up|register)\b", q):
         return "tax", {"mygov_create"}, "mygov_create"
-    if re.search(r"\bmygov\b", q) and re.search(r"\b(what|how|account|used for|do)\b", q):
+    if re.search(r"\b(?:what is (?:a )?mygov(?: account)?|what does mygov do|what can mygov do|how does mygov work|what is mygov used for)\b", q):
         return "tax", {"mygov_basics"}, "mygov_basics"
     if re.search(r"\b(tax resident|tax residency|resident for tax purposes|residency for tax)\b", q):
         return "tax", {"tax_residency"}, "tax_residency"
-    if re.search(r"\bsuper(?:annuation)?\b", q) and re.search(r"\b(what|how|work|employer|contribution|visa holder)\b", q):
+    if re.search(r"\bsuper(?:annuation)?\b", q) and (
+        re.search(r"\b(what is|what does|how does|how super works|employer contributions?|visa holders?)\b", q)
+        or re.search(r"\b(super|superannuation)\s+(?:work|works|contribution|contributions)\b", q)
+    ):
         return "tax", {"super_basics"}, "super_basics"
     if re.search(r"\btax return\b", q) and re.search(r"\b(how|where|lodge|file|submit|complete|online)\b", q):
         return "tax", {"tax_lodge"}, "tax_lodge"
@@ -234,7 +245,8 @@ def route_question(question: str, selected_topic: str) -> tuple[str | None, set[
 
 
 def search_sources(
-    connection: sqlite3.Connection, question: str, topic: str = "tax", limit: int = 5
+    connection: sqlite3.Connection, question: str, topic: str = "tax", limit: int = 5,
+    semantic_index: SemanticIndex | None = None,
 ) -> tuple[list[dict], str]:
     domain, allowed_intents, route = route_question(question, topic)
     if domain is None:
@@ -260,7 +272,7 @@ def search_sources(
             params,
         ).fetchall()
         required = (
-            max(2, math.ceil(len(query_terms) * 0.65)) if broad
+            max(2, math.ceil(len(query_terms) * 0.75)) if broad
             else 1 if len(query_terms) == 1 else max(2, math.ceil(len(query_terms) * 0.5))
         )
         results = []
@@ -297,4 +309,19 @@ def search_sources(
         general = find(general_terms, None, True)
         if general:
             return general, "matched_broad"
+        if semantic_index is not None:
+            candidates = semantic_index.search(question, domain)
+            if candidates:
+                best = candidates[0]
+                second = candidates[1] if len(candidates) > 1 else None
+                # Accept a very strong match, or a strong match that clearly
+                # outranks the next note. Nearby alternatives are ambiguous.
+                gap = best["semantic_score"] - second["semantic_score"] if second else 1.0
+                confident = (
+                    best["semantic_score"] >= 0.78 and gap >= 0.02
+                ) or (
+                    second is not None and best["semantic_score"] >= 0.68 and gap >= 0.035
+                )
+                if confident:
+                    return [best], "matched_semantic"
     return [], "weak_or_no_match" if allowed_intents else route

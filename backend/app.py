@@ -19,6 +19,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from .retrieval import broad_graduation_question, route_question, search_sources
+from .semantic import SemanticIndex
 from .storage import connect, list_notes, seed_if_empty
 
 
@@ -188,6 +189,8 @@ def official_starting_page(question: str, topic: str) -> dict:
         return {"label": "Official starting page — Home Affairs after you apply", "url": "https://immi.homeaffairs.gov.au/help-support/applying-online-or-on-paper/online/after-you-apply"}
     if re.search(r"\b(tfn|tax file number)\b", q):
         return {"label": "Official starting page — ATO tax file numbers", "url": "https://www.ato.gov.au/individuals-and-families/tax-file-number/what-is-a-tax-file-number"}
+    if re.search(r"\b(graduate visa|temporary graduate visa|subclass 485)\b", q):
+        return {"label": "Official starting page — Home Affairs Temporary Graduate visa", "url": "https://immi.homeaffairs.gov.au/visas/getting-a-visa/visa-listing/temporary-graduate-485"}
     if re.search(r"\b(tax|ato|refund|super|mygov)\b", q) or topic == "tax" and not re.search(r"\b(visa|student|visitor|immigration)\b", q):
         return {"label": "Official starting page — Australian Taxation Office", "url": "https://www.ato.gov.au/"}
     if re.search(r"\b(fee|cost|price|charge)\b", q):
@@ -394,15 +397,20 @@ def create_app(
     db = connect(database_path)
     seed_if_empty(db, seed_path)
     db_lock = threading.Lock()
+    semantic_index = SemanticIndex()
+    semantic_index.rebuild(db)
     api = FastAPI(title="Gov Assistant API", version="0.1.0")
     api.state.db = db
+    api.state.semantic_index = semantic_index
 
     @api.get("/api/health")
     def health() -> dict:
         with db_lock:
             count = int(db.execute("SELECT COUNT(*) FROM source_chunks WHERE status='approved'").fetchone()[0])
             pages = int(db.execute("SELECT COUNT(DISTINCT url) FROM source_chunks WHERE status='approved'").fetchone()[0])
-        return {"status": "ok", "approved_source_notes": count, "indexed_source_pages": pages, "ollama_model": model_name() or None, "ollama_connection_checked": False}
+        return {"status": "ok", "approved_source_notes": count, "indexed_source_pages": pages,
+                "ollama_model": model_name() or None, "ollama_connection_checked": False,
+                "semantic_search_available": semantic_index.available}
 
     @api.get("/api/sources")
     def sources() -> list[dict]:
@@ -428,7 +436,11 @@ def create_app(
         # SQLite FTS5 uses this shared connection; keep simultaneous requests
         # from stepping through its ranking cursor at the same time.
         with db_lock:
-            evidence, reason = search_sources(db, question, request.topic)
+            if semantic_index.available and semantic_index.ids != tuple(
+                row[0] for row in db.execute("SELECT id FROM source_chunks WHERE status='approved' ORDER BY id")
+            ):
+                semantic_index.rebuild(db)
+            evidence, reason = search_sources(db, question, request.topic, semantic_index=semantic_index)
         _, _, route = route_question(question, request.topic)
         if not evidence:
             starting_pages = [official_starting_page(question, request.topic)]
@@ -467,7 +479,7 @@ def create_app(
         # A broad match has no route-specific answer validator. Show the
         # approved source text directly rather than asking the model to infer.
         controlled_reason = (
-            "broad_search_source_extract" if reason == "matched_broad"
+            "broad_search_source_extract" if reason in {"matched_broad", "matched_semantic"}
             else extractive_only_reason(question, route)
         )
         fallback_reason = controlled_reason or "ollama_not_configured"

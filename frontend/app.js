@@ -276,6 +276,7 @@ function updateSiteStatus() {
   const pages=Number.isInteger(healthInfo?.indexed_source_pages) ? healthInfo.indexed_source_pages : new Set(indexedSources.map(item=>item.url)).size;
   const latest=indexedSources.map(item=>item.reviewed_on).filter(value=>/^\d{4}-\d{2}-\d{2}$/.test(value || '')).sort().at(-1);
   const parts=[`${count} indexed source ${count===1?'note':'notes'} from ${pages} government ${pages===1?'page':'pages'}`];
+  if (healthInfo) parts.push(healthInfo.semantic_search_available ? 'meaning-based search on' : 'keyword search on');
   if (latest) parts.push(`latest note date ${formatDate(latest)}`);
   parts.push(healthInfo?.ollama_model ? `local model configured: ${healthInfo.ollama_model}` : 'source-extract mode available');
   siteStatus.textContent=parts.join(' · ');

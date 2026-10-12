@@ -23,7 +23,7 @@ class BackendTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         self.db_path = Path(self.tmp.name) / "knowledge.sqlite"
-        self.model_patch = patch.dict(os.environ, {"OLLAMA_MODEL": ""})
+        self.model_patch = patch.dict(os.environ, {"OLLAMA_MODEL": "", "OLLAMA_EMBED_MODEL": ""})
         self.model_patch.start()
         self.addCleanup(self.model_patch.stop)
         self.app = create_app(self.db_path)
@@ -434,6 +434,78 @@ class BackendTests(unittest.TestCase):
                 self.assertEqual(len(result["evidence"]), 1)
                 self.assertTrue(result["evidence"][0]["url"].endswith(url_suffix))
                 self.assertIn(result["evidence"][0]["text"], result["text"])
+
+    def test_open_question_retrieval_accepts_paraphrases_without_an_intent_rule(self):
+        class LocalSemanticStub:
+            def __init__(self, note):
+                self.note = note
+                self.calls = 0
+
+            def search(self, _question, _topic):
+                self.calls += 1
+                return [{**self.note, "semantic_score": 0.81}]
+
+        note = dict(self.app.state.db.execute(
+            "SELECT * FROM source_chunks WHERE status='approved' AND url LIKE '%/stay-longer' LIMIT 1"
+        ).fetchone())
+        index = LocalSemanticStub(note)
+        evidence, reason = search_sources(
+            self.app.state.db, "I finished uni, how do I stay in Australia?", "visa",
+            semantic_index=index,
+        )
+        self.assertEqual(reason, "matched_semantic")
+        self.assertEqual(evidence[0]["url"], note["url"])
+        self.assertEqual(index.calls, 1)
+
+        # A current-fee question cannot bypass the restricted route through
+        # semantic similarity, even if a model proposes a close note.
+        blocked, _ = search_sources(
+            self.app.state.db, "Tell me the exact current Student visa fee", "visa",
+            semantic_index=index,
+        )
+        self.assertEqual(blocked, [])
+        self.assertEqual(index.calls, 1)
+
+        # A modestly similar government form is not enough to answer a
+        # different, unindexed service question.
+        class AmbiguousSemanticStub:
+            def search(self, _question, _topic):
+                return [
+                    {**note, "semantic_score": 0.655},
+                    {**note, "semantic_score": 0.649},
+                ]
+
+        unrelated, _ = search_sources(
+            self.app.state.db, "How do I apply for a driver licence?", "visa",
+            semantic_index=AmbiguousSemanticStub(),
+        )
+        self.assertEqual(unrelated, [])
+
+    def test_unseen_wording_reaches_relevant_pages_without_guessing_missing_answers(self):
+        for question, topic, suffix in (
+            ("My boss says they can cancel my visa. Is that true?", "visa", "working-rights-and-obligations-as-a-visa-holder"),
+            ("I have several retirement funds. Can I put them together?", "tax", "managing-your-super"),
+            ("My college has closed, what happens to my enrolment?", "visa", "education-provider-default"),
+            ("How do I fix an error in a return I already filed?", "tax", "after-you-lodge-your-tax-return"),
+        ):
+            with self.subTest(question=question):
+                result = self.client.post("/api/chat", json={"question": question, "topic": topic}).json()
+                self.assertEqual(result["diagnostics"]["reason"], "matched_broad")
+                self.assertEqual(result["mode"], "extractive")
+                self.assertTrue(result["evidence"][0]["url"].endswith(suffix))
+
+        for question, topic in (
+            ("Can you tell me if I qualify for a Graduate visa?", "visa"),
+            ("My employer has not paid my super. What now?", "tax"),
+            ("I want to transfer money to my bank", "tax"),
+            ("What are my tenancy rights as an international student?", "visa"),
+            ("How to transfer my course credits?", "visa"),
+        ):
+            with self.subTest(question=question):
+                result = self.client.post("/api/chat", json={"question": question, "topic": topic}).json()
+                self.assertEqual(result["evidence"], [])
+                if "Graduate visa" in question:
+                    self.assertTrue(result["sources"][0]["url"].endswith("temporary-graduate-485"))
 
     def test_broad_search_rejects_unrelated_and_sensitive_requests(self):
         for question, topic in (
