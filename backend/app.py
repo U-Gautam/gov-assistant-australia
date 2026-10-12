@@ -133,6 +133,19 @@ def introduction_answer(route: str) -> str:
     )
 
 
+def needs_clarification(question: str) -> bool:
+    """Distinguish an unclear fragment from a specific question with no source."""
+    if re.search(r"\b(medicare|centrelink|centerlink|passport|newcastle|council)\b", question, re.IGNORECASE):
+        return False
+    words = re.findall(r"[a-z0-9]+", question.lower())
+    if len(words) <= 1:
+        return True
+    return len(words) <= 3 and not re.search(
+        r"\b(tax|visa|student|mygov|super|ato|tfn|abn|passport|medicare|centrelink)\b",
+        question, re.IGNORECASE,
+    )
+
+
 def asks_private_visa_records(question: str) -> bool:
     q = question.lower()
     return "visa" in q and bool(re.search(r"\b(look up|government records|personal visa status)\b", q))
@@ -443,6 +456,13 @@ def create_app(
             evidence, reason = search_sources(db, question, request.topic, semantic_index=semantic_index)
         _, _, route = route_question(question, request.topic)
         if not evidence:
+            if reason in {"outside_scope", "weak_or_no_match", "unsupported_tax_intent", "unsupported_visa_intent"} and needs_clarification(question):
+                return {
+                    "text": "I’m not sure what you’re asking. Please write a full question about Australian tax or visas. "
+                            "For example: ‘How do I apply for a TFN?’ or ‘Where can I check my visa conditions?’",
+                    "sources": [], "mode": "guidance", "evidence": [],
+                    "diagnostics": {"reason": "unclear_question", "retrieved": 0, "generation": "none"},
+                }
             starting_pages = [official_starting_page(question, request.topic)]
             if asks_private_visa_records(question):
                 starting_pages.append({
