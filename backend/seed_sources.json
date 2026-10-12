@@ -603,5 +603,181 @@
     "body": "Home Affairs says a Visitor visa or Electronic Travel Authority (ETA) does not allow work in Australia. Other visas may limit the type or amount of work a person can do. Visa holders should check their own conditions in VEVO. This chat cannot inspect a person's visa or determine individual work rights.",
     "keywords": "visitor visa visitors work australia working employment rights restrictions eta vevo",
     "reviewed_on": "2026-10-12"
+  },
+  {
+    "topic": "tax",
+    "intent": "tax_amend_return",
+    "agency": "myGov (Services Australia)",
+    "title": "After you lodge your tax return",
+    "section": "Amending a lodged return",
+    "url": "https://my.gov.au/en/services/work/currently-employed/tax-when-you-work/tax-time/after-you-lodge-your-tax-return",
+    "body": "If you made a mistake or need to add information after lodging, myGov says you can sign in, open the linked Australian Taxation Office service, select Manage tax returns and choose Amend for the relevant income year. The ATO notice of assessment appears in your myGov Inbox after processing. This chat cannot open or change your return.",
+    "keywords": "amend tax return after lodging mistake correction change income year mygov ato",
+    "reviewed_on": "2026-10-12"
+  },
+  {
+    "topic": "tax",
+    "intent": "super_combine",
+    "agency": "myGov (Services Australia)",
+    "title": "Managing your super",
+    "section": "Check and combine super accounts",
+    "url": "https://my.gov.au/en/services/work/currently-employed/superannuation/managing-your-super",
+    "body": "ATO online services through myGov let you check super balances, search for lost super and compare or transfer accounts. Sign in, select Australian Taxation Office, then Super and the information or manage options. Whether combining funds suits you depends on your account and insurance arrangements; this chat cannot see either.",
+    "keywords": "combine consolidate super accounts balances transfer lost fund mygov ato",
+    "reviewed_on": "2026-10-12"
+  },
+  {
+    "topic": "tax",
+    "intent": "super_early_access",
+    "agency": "myGov (Services Australia)",
+    "title": "Accessing your super",
+    "section": "Early access is limited",
+    "url": "https://my.gov.au/en/services/work/currently-employed/superannuation/accessing-your-super",
+    "body": "Super is generally set aside for retirement. myGov says early access is available only in limited situations and links to the ATO rules. The chatbot cannot determine whether a person qualifies or release money from a super account.",
+    "keywords": "early access super withdraw before retirement limited circumstances ato",
+    "reviewed_on": "2026-10-12"
+  },
+  {
+    "topic": "tax",
+    "intent": "mygov_overseas",
+    "agency": "myGov (Services Australia)",
+    "title": "Accessing myGov while overseas",
+    "section": "Prepare sign-in before travel",
+    "url": "https://my.gov.au/en/about/help/mygov-website/help-using-your-account/accessing-mygov-while-overseas",
+    "body": "myGov advises checking your sign-in method before going overseas. People using SMS or code-generator codes need to ensure they can receive or generate them abroad; other sign-in options include the myGov app, passkey and Digital ID. Use the official sign-in help if locked out. Do not share codes or passwords in this chat.",
+    "keywords": "access mygov overseas abroad travel sign in sms codes passkey digital id",
+    "reviewed_on": "2026-10-12"
+  },
+  {
+    "topic": "tax",
+    "intent": "mygov_inbox",
+    "agency": "myGov (Services Australia)",
+    "title": "Use your myGov Inbox",
+    "section": "Read messages from linked services",
+    "url": "https://my.gov.au/en/about/help/mygov-website/help-using-your-account/use-your-mygov-inbox",
+    "body": "After signing in to myGov, select Inbox to read messages from myGov or supported linked services. Notifications can be sent by SMS, email or the myGov app. A message from an unlinked service or one that has expired may no longer appear in the Inbox; contact the sending service for a copy.",
+    "keywords": "mygov inbox read messages notice assessment notifications expired linked service",
+    "reviewed_on": "2026-10-12"
+  },
+  {
+    "topic": "tax",
+    "intent": "mygov_contact_update",
+    "agency": "myGov (Services Australia)",
+    "title": "How to update your details in myGov",
+    "section": "Update contact information",
+    "url": "https://my.gov.au/en/about/help/mygov-website/help-using-your-account/how-to-update-your-personal-and-contact-details-in-mygov",
+    "body": "In myGov, sign in and open My account or Menu, then Profile and Contact details to edit an address, email or phone number. myGov may offer to share the update with eligible linked services; check the selected services before submitting. Do not enter personal contact details into this chat.",
+    "keywords": "mygov update change address email phone profile contact details linked ato",
+    "reviewed_on": "2026-10-12"
+  },
+  {
+    "topic": "tax",
+    "intent": "help_loan_withholding",
+    "agency": "myGov (Services Australia)",
+    "title": "What other payments come out of your pay",
+    "section": "Study-loan repayments through pay withholding",
+    "url": "https://my.gov.au/en/services/work/currently-employed/tax-when-you-work/paying-tax/what-other-payments-come-out-of-your-pay",
+    "body": "A person with an Australian Government HELP or other study support loan should tell their employer when starting work. The employer may withhold amounts from pay toward compulsory repayments when the income threshold applies. The amount depends on income and the current rules; check your own loan and ATO information.",
+    "keywords": "help hecs study loan repayment pay withholding employer threshold",
+    "reviewed_on": "2026-10-12"
+  },
+  {
+    "topic": "tax",
+    "intent": "tax_work_from_home",
+    "agency": "Australian Taxation Office",
+    "title": "Working from home expenses",
+    "section": "General deduction methods and records",
+    "url": "https://www.ato.gov.au/individuals-and-families/income-deductions-offsets-and-records/deductions-you-can-claim/working-from-home-expenses",
+    "body": "The ATO describes fixed-rate and actual-cost methods for eligible extra expenses incurred while working from home. A person must be carrying out employment duties, have additional running expenses and keep records. Private costs and items reimbursed by an employer are not claimable under these rules. Check the current ATO method and records before claiming.",
+    "keywords": "work from home deduction fixed rate actual cost running expenses records claim",
+    "reviewed_on": "2026-10-12"
+  },
+  {
+    "topic": "tax",
+    "intent": "tax_bill_prevention",
+    "agency": "myGov (Services Australia)",
+    "title": "Help to get the right outcome at tax time",
+    "section": "Withholding and records before tax time",
+    "url": "https://my.gov.au/en/services/work/currently-employed/tax-when-you-work/tax-time/helping-you-get-the-right-outcome-at-tax-time",
+    "body": "Having several income sources can mean too little tax is withheld during the year. myGov points to the ATO tax calculator and advises keeping records for any deductions. A tax bill depends on personal income and withholding; this chat cannot calculate or predict one.",
+    "keywords": "avoid tax bill multiple jobs income withholding calculator deductions records",
+    "reviewed_on": "2026-10-12"
+  },
+  {
+    "topic": "visa",
+    "intent": "visa_workplace_rights",
+    "agency": "myGov (Services Australia)",
+    "title": "Working rights and obligations as a visa holder",
+    "section": "Pay and workplace protections",
+    "url": "https://my.gov.au/en/services/living-arrangements/coming-to-australia/coming-to-australia-to-work/working-rights-and-obligations-as-a-visa-holder",
+    "body": "Visa holders have the same basic workplace rights and entitlements as other employees in Australia. An employer cannot cancel a visa; only Home Affairs can grant, refuse or cancel one. For pay or workplace problems, the Fair Work Ombudsman offers help. A separate check of the visa grant or VEVO is needed for work conditions.",
+    "keywords": "visa holder workplace rights pay employer cancel visa fair work entitlements exploitation",
+    "reviewed_on": "2026-10-12"
+  },
+  {
+    "topic": "visa",
+    "intent": "visa_finding_work",
+    "agency": "myGov (Services Australia)",
+    "title": "Finding work as a visa holder",
+    "section": "Official routes for skilled work",
+    "url": "https://my.gov.au/en/services/living-arrangements/coming-to-australia/coming-to-australia-to-work/finding-work-as-a-visa-holder",
+    "body": "myGov points prospective workers to the Home Affairs skilled occupation list and official information about expressing interest in a skilled visa. Other work programs and job-search support exist. The suitable route depends on the person and visa conditions, which this chatbot cannot assess.",
+    "keywords": "finding work visa holder skilled occupation list expression interest jobs employment",
+    "reviewed_on": "2026-10-12"
+  },
+  {
+    "topic": "visa",
+    "intent": "student_getting_started",
+    "agency": "myGov (Services Australia)",
+    "title": "Coming to Australia to study",
+    "section": "Course offer and enrolment before applying",
+    "url": "https://my.gov.au/en/services/living-arrangements/coming-to-australia/coming-to-australia-to-study",
+    "body": "myGov advises choosing a course, applying to an education provider, accepting an offer and receiving confirmation of enrolment before applying for a Student visa. Use the official course finder and Home Affairs visa information for current requirements. Admission or a CoE alone does not guarantee a visa.",
+    "keywords": "international study australia choose course offer confirmation enrolment coe student visa apply",
+    "reviewed_on": "2026-10-12"
+  },
+  {
+    "topic": "visa",
+    "intent": "student_genuine",
+    "agency": "Department of Home Affairs",
+    "title": "Genuine Student requirement",
+    "section": "Purpose and supporting evidence",
+    "url": "https://immi.homeaffairs.gov.au/visas/getting-a-visa/visa-listing/student-500/genuine-student-requirement",
+    "body": "For Student visa applications lodged from 23 March 2024, Home Affairs applies the Genuine Student requirement. Applicants explain why they intend to study the chosen course and provider in Australia and give supporting evidence in ImmiAccount. A future possibility of permanent residence does not by itself count against a genuine student. The chatbot cannot assess an application.",
+    "keywords": "genuine student gs requirement student visa statement evidence study intention course provider",
+    "reviewed_on": "2026-10-12"
+  },
+  {
+    "topic": "visa",
+    "intent": "student_provider_default",
+    "agency": "Department of Home Affairs",
+    "title": "Education provider default",
+    "section": "Alternative course or tuition refund",
+    "url": "https://immi.homeaffairs.gov.au/visas/getting-a-visa/visa-listing/student-500/education-provider-default",
+    "body": "If a registered education provider cannot deliver an agreed course, affected students may be offered a suitable alternative or a refund of unspent prepaid tuition fees. Home Affairs says Student visa holders need to maintain enrolment and may need a new Confirmation of Enrolment. The Tuition Protection Service may assist; check the official page and your provider for your situation.",
+    "keywords": "education provider default course closes tuition protection tps refund alternative coe",
+    "reviewed_on": "2026-10-12"
+  },
+  {
+    "topic": "visa",
+    "intent": "bridging_visa_travel",
+    "agency": "Department of Home Affairs",
+    "title": "Travel while your visa is being processed",
+    "section": "Bridging visa travel restrictions",
+    "url": "https://immi.homeaffairs.gov.au/entering-and-leaving-australia/travelling-and-your-visa/travel-while-your-visa-is-being-processed",
+    "body": "Home Affairs says only a Bridging visa B permits a person to leave and re-enter Australia during its specified travel period while waiting for a substantive visa decision. Leaving Australia on another bridging visa can cause it to cease. Check the grant notice and Home Affairs before booking travel; this chat cannot verify a personal travel entitlement.",
+    "keywords": "bridging visa b travel leave return australia pending application bvb reenter",
+    "reviewed_on": "2026-10-12"
+  },
+  {
+    "topic": "visa",
+    "intent": "student_visa_length",
+    "agency": "Department of Home Affairs",
+    "title": "Length of stay for Student visas",
+    "section": "Course and OSHC affect visa period",
+    "url": "https://immi.homeaffairs.gov.au/visas/getting-a-visa/visa-listing/student-500/length-of-stay",
+    "body": "Home Affairs bases a Student visa stay period on the course length and may add time after the course, subject to Overseas Student Health Cover and other arrangements. The actual visa expiry date is the one on the grant and in VEVO; completing a course does not automatically extend the visa. Check the official page for how periods are worked out.",
+    "keywords": "student visa length stay after course graduation expiry date oshc vevo",
+    "reviewed_on": "2026-10-12"
   }
 ]

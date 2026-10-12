@@ -8,7 +8,7 @@ import sqlite3
 
 
 STOP_WORDS = set(
-    "a about an and are as at be by can could do does for from have how i in is it me my of on or our should the their there these this to was were what when where which while who with you your"
+    "a about an and are as at be before by can could do does for from have how i if in is it me might my of on or our should the their there these this to was were what when where which while who with you your"
     .split()
 )
 FOLD = {
@@ -18,22 +18,29 @@ FOLD = {
     "lodged": "lodge", "lodging": "lodge", "transferring": "transfer",
     "providers": "provider", "children": "child", "dependants": "dependant",
     "visitors": "visitor", "expenses": "expense", "records": "record",
-    "allowed": "allow",
+    "allowed": "allow", "jobs": "job", "coming": "come", "steps": "step",
+    "long": "length", "last": "length",
+    "studying": "study", "studied": "study", "defaults": "default",
 }
 
 # A broad match needs more than words found on almost every page. The narrow
 # routes below still take precedence for dates, eligibility and other cases.
 BROAD_NOISE = {
     "australia", "australian", "tax", "visa", "student", "ato", "government",
-    "information", "question", "help", "get", "find", "please", "tell", "know",
+    "information", "question", "help", "get", "find", "please", "tell", "know", "cause", "happens",
 }
 BROAD_RESTRICTED = re.compile(
-    r"\b(?:am i|can i|could i|do i|my|mine|approve|approval|guarantee|"
+    r"\b(?:approve|approval|guarantee|"
     r"book|appointment|exact|current|latest|today|now|fee|fees|cost|price|"
     r"charge|processing time|recent|changed|changes|updated|eligible|eligibility|"
-    r"status|decision|refund|appeal|personal|account|number)\b"
+    r"status|decision|refund|appeal|personal|number)\b"
 )
 BROAD_OUTSIDE_SCOPE = re.compile(r"\b(?:passport|citizenship|centrelink|medicare|council)\b")
+SAFE_BROAD_ROUTES = {
+    "unsupported_tax_intent", "unsupported_visa_intent", "outside_scope",
+    "mygov_basics", "super_basics", "tax_basics", "tax_lodge",
+    "student_visa_basics", "visitor_visa_basics",
+}
 
 
 def terms(value: str) -> list[str]:
@@ -43,7 +50,7 @@ def terms(value: str) -> list[str]:
 
 def broad_terms(question: str, route: str) -> list[str]:
     """Permit an evidence-only search for specific, non-personal questions."""
-    if route not in {"unsupported_tax_intent", "unsupported_visa_intent", "outside_scope"}:
+    if route not in SAFE_BROAD_ROUTES:
         return []
     if BROAD_RESTRICTED.search(question.lower()) or BROAD_OUTSIDE_SCOPE.search(question.lower()):
         return []
@@ -105,14 +112,18 @@ def route_question(question: str, selected_topic: str) -> tuple[str | None, set[
         return "tax", set(), "unsupported_tax_intent"
     if re.search(r"\bmygov\b", q) and re.search(r"\b(ato|australian taxation office)\b", q) and re.search(r"\b(link|connect)\b", q):
         return "tax", {"ato_link"}, "ato_link"
+    if re.search(r"\bmygov\b", q) and re.search(r"\b(inbox|messages?|notifications?)\b", q):
+        return "tax", {"mygov_inbox"}, "mygov_inbox"
     if re.search(r"\bincome statements?\b", q) and re.search(r"\b(where|view|see|access|find|check)\b", q):
         return "tax", {"income_statement"}, "income_statement"
     if re.search(r"\bsuper(?:annuation)?\b", q) and re.search(r"\b(lost|missing|unclaimed)\b", q):
         return "tax", {"super_lost"}, "super_lost"
     if re.search(r"\b(abn|australian business number)\b", q):
         return "tax", {"abn_basics"}, "abn_basics"
-    if re.search(r"\bsuper(?:annuation)?\b", q) and re.search(r"\b(leave|leaving|depart|departing|back|withdraw|dasp)\b", q):
+    if re.search(r"\bsuper(?:annuation)?\b", q) and re.search(r"\b(leave|leaving|depart|departing|back|dasp)\b", q):
         return "tax", {"super_dasp"}, "super_dasp"
+    if re.search(r"\btax return\b", q) and re.search(r"\b(amend|amending|amendment|correct|correction|mistake)\b", q):
+        return "tax", {"tax_amend_return"}, "tax_amend_return"
     if re.search(r"\btax return\b", q) and re.search(r"\b(need|whether|must|should|required)\b", q) and re.search(r"\b(lodge|lodging|lodged)\b", q):
         return "tax", {"tax_need_lodge"}, "tax_need_lodge"
     if re.search(r"\btax return\b", q) and re.search(r"\b(progress|status|track|tracked|already lodged|checked|check)\b", q):
@@ -128,6 +139,8 @@ def route_question(question: str, selected_topic: str) -> tuple[str | None, set[
         return "tax", {"tax_due_date"}, "tax_due_date"
     if re.search(r"\b(tax return|tax time)\b", q) and re.search(r"\b(prepare|documents|information|records|before lodging)\b", q):
         return "tax", {"tax_prepare"}, "tax_prepare"
+    if re.search(r"\btax bill\b", q) and re.search(r"\b(avoid|prevent|multiple|jobs?|income|withhold|withholding)\b", q):
+        return "tax", {"tax_bill_prevention"}, "tax_bill_prevention"
     if re.search(r"\b(tax[- ]?free threshold|earn tax[- ]?free|before (?:i )?pay tax)\b", q):
         return "tax", {"tax_free_threshold"}, "tax_free_threshold"
     if re.search(r"\b(tax|deduction|deductions)\b", q) and re.search(r"\b(deduction|deductions|expenses|receipts)\b", q):
@@ -164,6 +177,8 @@ def route_question(question: str, selected_topic: str) -> tuple[str | None, set[
         return "visa", {"visa_address_update"}, "visa_address_update"
     if re.search(r"\bvisa\b", q) and re.search(r"\b(refus(?:e|ed|al)|reject(?:ed|ion)?|denied|appeal|review rights)\b", q):
         return "visa", {"visa_refusal"}, "visa_refusal"
+    if re.search(r"\b(bridging visa|bvb)\b", q) and re.search(r"\b(travel|leave|leaving|depart|return|re.?enter)\b", q):
+        return "visa", {"bridging_visa_travel"}, "bridging_visa_travel"
     if re.search(r"\b(bridging visa|bva)\b", q):
         return "visa", {"bridging_visa_basics"}, "bridging_visa_basics"
     if re.search(r"\bvisa\b", q) and re.search(r"\b(status|progress|pending)\b", q) and re.search(r"\b(application|applied|lodged|online|immiaccount)\b", q):
@@ -186,6 +201,8 @@ def route_question(question: str, selected_topic: str) -> tuple[str | None, set[
         return "visa", {"visitor_visa_basics"}, "visitor_visa_basics"
     if re.search(r"\b(?:what is|explain|meaning of)\s+(?:a\s+|the\s+)?student visa\b", q):
         return "visa", {"student_visa_basics"}, "student_visa_basics"
+    if re.search(r"\bstudent visa\b", q) and re.search(r"\b(how long|length|duration|last|valid for)\b", q):
+        return "visa", {"student_visa_length"}, "student_visa_length"
     if selected_topic == "visa" and re.search(r"\bgraduat(?:e|es|ed|ing|ion)\b", q) and re.search(r"\b(work|working|hours?|employment)\b", q):
         return "visa", {"student_work_after_study"}, "student_work_after_study"
     student = bool(re.search(r"\b(students?|guardian|subclass 500|subclass 590)\b", q))
@@ -220,49 +237,64 @@ def search_sources(
     connection: sqlite3.Connection, question: str, topic: str = "tax", limit: int = 5
 ) -> tuple[list[dict], str]:
     domain, allowed_intents, route = route_question(question, topic)
-    broad = not allowed_intents and domain is not None
-    query_terms = broad_terms(question, route) if broad else terms("graduation" if broad_graduation_question(question) else question)
-    if not query_terms or domain is None:
+    if domain is None:
         return [], route
-    # Quoting every token makes user input data, never FTS query syntax.
-    match = " OR ".join(f'"{word}"' for word in query_terms)
-    intent_filter = ""
-    params: tuple = (match, domain)
-    if not broad:
-        intent_marks = ",".join("?" for _ in allowed_intents)
-        intent_filter = f" AND c.intent IN ({intent_marks})"
-        params += tuple(sorted(allowed_intents))
-    rows = connection.execute(
-        f"""SELECT c.*, bm25(source_fts, 2.5, 1.3, 1.0, 1.8) AS fts_rank
-             FROM source_fts JOIN source_chunks AS c ON c.id = source_fts.rowid
-             WHERE source_fts MATCH ? AND c.status='approved' AND c.topic=?
-                   {intent_filter}
-             ORDER BY fts_rank LIMIT 40""",
-        params,
-    ).fetchall()
-    required = (
-        max(2, math.ceil(len(query_terms) * 0.75)) if broad
-        else 1 if len(query_terms) == 1 else max(2, math.ceil(len(query_terms) * 0.5))
-    )
-    results = []
-    for row in rows:
-        haystack = set(terms(" ".join(str(row[field]) for field in ("title", "section", "body", "keywords"))))
-        overlap = len(set(query_terms) & haystack)
-        if overlap < required:
-            continue
-        result = dict(row)
-        result["term_overlap"] = overlap
-        result["query_term_count"] = len(query_terms)
-        results.append(result)
-    # For broad change questions, put the overview first; within each group,
-    # lexical coverage and FTS5's BM25 score decide the order.
-    results.sort(key=lambda item: (
-        0 if (
-            route == "student_changes" and item["intent"] == "student_changes" and "Overview" in item["section"]
-            or route == "student_post_study" and "vevo" in item["section"].lower()
-        ) else 1,
-        -item["term_overlap"], item["fts_rank"],
-    ))
-    if not results:
-        return [], route if broad else "weak_or_no_match"
-    return results[: min(limit, 3) if broad else limit], "matched_broad" if broad else "matched"
+
+    def find(query_terms: list[str], intents: set[str] | None, broad: bool) -> list[dict]:
+        if not query_terms:
+            return []
+        # Quoting every token makes user input data, never FTS query syntax.
+        match = " OR ".join(f'"{word}"' for word in query_terms)
+        intent_filter = ""
+        params: tuple = (match, domain)
+        if intents is not None:
+            intent_marks = ",".join("?" for _ in intents)
+            intent_filter = f" AND c.intent IN ({intent_marks})"
+            params += tuple(sorted(intents))
+        rows = connection.execute(
+            f"""SELECT c.*, bm25(source_fts, 2.5, 1.3, 1.0, 1.8) AS fts_rank
+                 FROM source_fts JOIN source_chunks AS c ON c.id = source_fts.rowid
+                 WHERE source_fts MATCH ? AND c.status='approved' AND c.topic=?
+                       {intent_filter}
+                 ORDER BY fts_rank LIMIT 40""",
+            params,
+        ).fetchall()
+        required = (
+            max(2, math.ceil(len(query_terms) * 0.65)) if broad
+            else 1 if len(query_terms) == 1 else max(2, math.ceil(len(query_terms) * 0.5))
+        )
+        results = []
+        query_set = set(query_terms)
+        for row in rows:
+            haystack = set(terms(" ".join(str(row[field]) for field in ("title", "section", "body", "keywords"))))
+            overlap = len(query_set & haystack)
+            if overlap < required:
+                continue
+            result = dict(row)
+            result["term_overlap"] = overlap
+            result["title_overlap"] = len(query_set & set(terms(row["title"] + " " + row["section"])))
+            result["query_term_count"] = len(query_terms)
+            results.append(result)
+        # Keep an overview or VEVO note first for their deliberately narrow routes.
+        results.sort(key=lambda item: (
+            0 if (
+                route == "student_changes" and item["intent"] == "student_changes" and "Overview" in item["section"]
+                or route == "student_post_study" and "vevo" in item["section"].lower()
+            ) else 1,
+            -item["term_overlap"], -item["title_overlap"], item["fts_rank"],
+        ))
+        # Broad lexical matches can include neighbouring but different topics.
+        # Show only the strongest reviewed passage until a focused route exists.
+        return results[:1] if broad else results[:limit]
+
+    if allowed_intents:
+        focused_terms = terms("graduation" if broad_graduation_question(question) else question)
+        focused = find(focused_terms, allowed_intents, False)
+        if focused:
+            return focused, "matched"
+    general_terms = broad_terms(question, route)
+    if general_terms:
+        general = find(general_terms, None, True)
+        if general:
+            return general, "matched_broad"
+    return [], "weak_or_no_match" if allowed_intents else route

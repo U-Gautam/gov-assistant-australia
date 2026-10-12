@@ -366,6 +366,8 @@ def extractive_only_reason(question: str, route: str) -> str | None:
         return "personal_graduate_visa_eligibility_requires_home_affairs_check"
     return {
         "tax_need_lodge": "personal_tax_assessment_requires_official_tool",
+        "tax_amend_return": "personal_tax_amendment_requires_ato_check",
+        "tax_bill_prevention": "personal_tax_bill_requires_ato_check",
         "tax_residency": "personal_tax_residency_requires_official_check",
         "tax_nonlodgment": "personal_lodgment_status_requires_official_check",
         "super_dasp": "personal_super_release_requires_ato_check",
@@ -375,6 +377,8 @@ def extractive_only_reason(question: str, route: str) -> str | None:
         "student_post_study": "personal_visa_options_require_official_check",
         "visa_fee_time": "live_values_require_official_tools",
         "bridging_visa_basics": "personal_bridging_conditions_require_vevo",
+        "bridging_visa_travel": "personal_bridging_travel_rights_require_home_affairs_check",
+        "student_visa_length": "personal_visa_expiry_requires_grant_or_vevo_check",
         "visa_refusal": "personal_review_rights_require_decision_notice",
         "visa_refund": "personal_visa_refund_requires_home_affairs_check",
     }.get(route)

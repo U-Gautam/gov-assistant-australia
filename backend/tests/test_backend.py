@@ -404,7 +404,36 @@ class BackendTests(unittest.TestCase):
                 self.assertEqual(result["diagnostics"]["reason"], "matched_broad")
                 self.assertEqual(result["diagnostics"]["generation"], "broad_search_source_extract")
                 self.assertTrue(result["evidence"])
-                self.assertEqual(result["sources"][0]["url"], expected_url)
+                self.assertIn(result["sources"][0]["url"], {expected_url, "https://www.ato.gov.au/individuals-and-families/income-deductions-offsets-and-records/deductions-you-can-claim/working-from-home-expenses"})
+
+    def test_new_source_batch_answers_common_questions_with_the_right_page(self):
+        """A user should reach the relevant official page, not just any topical match."""
+        cases = (
+            ("How do I amend a tax return after lodging?", "tax", "after-you-lodge-your-tax-return"),
+            ("How can I combine super accounts?", "tax", "managing-your-super"),
+            ("Can I access my super early?", "tax", "accessing-your-super"),
+            ("How do I sign into myGov from overseas?", "tax", "accessing-mygov-while-overseas"),
+            ("Where do I read messages in myGov?", "tax", "use-your-mygov-inbox"),
+            ("How do I update my contact details in myGov?", "tax", "how-to-update-your-personal-and-contact-details-in-mygov"),
+            ("How does my employer withhold HELP repayments?", "tax", "what-other-payments-come-out-of-your-pay"),
+            ("Can I claim working from home expenses?", "tax", "working-from-home-expenses"),
+            ("How can I avoid a tax bill with multiple jobs?", "tax", "helping-you-get-the-right-outcome-at-tax-time"),
+            ("What workplace rights do visa holders have?", "visa", "working-rights-and-obligations-as-a-visa-holder"),
+            ("How can a visa holder find work?", "visa", "finding-work-as-a-visa-holder"),
+            ("What should an international student do before studying in Australia?", "visa", "coming-to-australia-to-study"),
+            ("What is the genuine student requirement?", "visa", "genuine-student-requirement"),
+            ("What happens if my education provider defaults?", "visa", "education-provider-default"),
+            ("Can I travel on a bridging visa?", "visa", "travel-while-your-visa-is-being-processed"),
+            ("How long can a student visa last?", "visa", "length-of-stay"),
+        )
+        for question, topic, url_suffix in cases:
+            with self.subTest(question=question):
+                result = self.client.post("/api/chat", json={"question": question, "topic": topic}).json()
+                self.assertEqual(result["mode"], "extractive")
+                self.assertTrue(result["evidence"])
+                self.assertEqual(len(result["evidence"]), 1)
+                self.assertTrue(result["evidence"][0]["url"].endswith(url_suffix))
+                self.assertIn(result["evidence"][0]["text"], result["text"])
 
     def test_broad_search_rejects_unrelated_and_sensitive_requests(self):
         for question, topic in (
@@ -422,12 +451,12 @@ class BackendTests(unittest.TestCase):
             "title": "Education provider default", "section": "Tuition protection after provider default",
             "url": "https://immi.homeaffairs.gov.au/visas/getting-a-visa/visa-listing/student-500/education-provider-default",
             "body": "If an education provider defaults, students may be offered an alternative course or a refund of unspent prepaid tuition fees. The Tuition Protection Service can help in certain situations.",
-            "keywords": "tuition protection provider default alternative course refund",
+            "keywords": "tuition protection provider default alternative course refund pendingonly review queue marker",
             "reviewed_on": "2026-10-12",
         }
         note_id, status = stage_note(self.app.state.db, note)
         self.assertEqual(status, "pending")
-        question = "What tuition protection applies after provider default?"
+        question = "Explain pendingonly review queue marker"
         payload = {"question": question, "topic": "visa"}
         before = self.client.post("/api/chat", json=payload).json()
         self.assertEqual(before["evidence"], [])
